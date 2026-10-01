@@ -1,0 +1,22 @@
+{
+  "sections": {
+    "calculator": {
+      "type": "sabian-calculator",
+      "settings": {
+        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.2.0/dist",
+        "klaviyo_public_key": "VtnJ2n",
+        "klaviyo_list_id": "SvxCvA",
+        "privacy_url": "https://www.gamlahealing.com/policies/privacy-policy",
+        "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
+        "color_bg": "#FDFCFE",
+        "color_text": "#4A4560",
+        "color_band": "#6760AF",
+        "color_band_text": "#FDFCFE",
+        "color_button": "#7F77DD"
+      }
+    }
+  },
+  "order": [
+    "calculator"
+  ]
+}

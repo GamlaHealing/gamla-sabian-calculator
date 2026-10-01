@@ -213,6 +213,10 @@ function sabianLabel(lon, html = true) {
 }
 
 const BIG_THREE = new Set(["Sun", "Moon", "Ascendant"]);
+const SERVICES_URL = "https://www.gamlahealing.com/collections/astrology-services";
+const MORE_TITLE = "This chart is a summary";
+const MORE_TEXT = "What you hold here is a short summary of your birth chart: one Sabian symbol for each main placement, and four paragraphs on your soul direction. Your chart holds much more. The aspects between your planets, the rulers of your houses, Chiron, Black Moon Lilith, the Part of Fortune, the asteroids and your current transits each add their own layer. Sylvain works through all of them in depth in his evolutionary astrology readings and in-depth astrological dossiers.";
+const MORE_LINK = "Explore the astrology services";
 const ORD = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
 const signOf = p => p.position.split(" ")[1];
 
@@ -252,7 +256,7 @@ function renderResults(chart, inp) {
     notes.push(escapeHtml(w).replace(/ deg ([NS])/, "° $1").replace(/^([^.:]+[.:])/, "<strong>$1</strong>"));
   }
 
-  const rows = pts.map(p => {
+  const rowList = pts.map(p => {
     const dupOf = firstBy[p.sabian]; if (!dupOf) firstBy[p.sabian] = p.point;
     const uncertain = !known && p.point === "Moon";
     if (!fullMode && !BIG_THREE.has(p.point)) {
@@ -265,7 +269,11 @@ function renderResults(chart, inp) {
       <td class="gc-sab"><span class="gc-deg">${p.sabian}</span> <span class="gc-sym">${escapeHtml(p.symbol || "")}</span><span class="gc-kw">${escapeHtml(p.keyword || "")}${uncertain ? " · uncertain without a birth time" : ""}</span>${dupOf ? `<span class="gc-dup">Same degree as your ${dupOf}</span>` : ""}</td>
       <td class="gc-art">${p.article_url ? `<a href="${p.article_url}" target="_blank" rel="noopener">${escapeHtml(p.article_title)}</a>` : ""}</td>
     </tr>`;
-  }).join("");
+  });
+  const ledger = (trs, head = true) => `<div class="gc-ledger-scroll"><table class="gc-ledger">
+      ${head ? `<thead><tr><th>Point</th><th>Position</th><th>House</th><th>Sabian symbol</th><th>Article</th></tr></thead>` : ""}
+      <tbody>${trs.join("")}</tbody>
+    </table></div>`;
 
   const offset = m.utc_offset.replace(/^([+-]\d\d)(\d\d)(\d\d)?$/, (_, h, mi, s) => `UTC${h}:${mi}${s ? ":" + s : ""}`);
   const mine = fullMode ? `
@@ -286,11 +294,11 @@ function renderResults(chart, inp) {
       ${m.house_system ? `<span>${m.house_system} houses</span>` : ""}
     </div>
     ${notes.length ? `<div class="gc-notes">${notes.map(n => `<p class="gc-note">${n}</p>`).join("")}</div>` : ""}
-    <div class="gc-ledger-scroll"><table class="gc-ledger">
-      <thead><tr><th>Point</th><th>Position</th><th>House</th><th>Sabian symbol</th><th>Article</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-    ${unlock}`;
+    ${fullMode ? ledger(rowList) : `
+    ${ledger(rowList.filter((_, i) => BIG_THREE.has(pts[i].point)))}
+    ${unlock}
+    <span class="gc-eyebrow gc-rest-title">Also in your full chart</span>
+    ${ledger(rowList.filter((_, i) => !BIG_THREE.has(pts[i].point)), false)}`}`;
   $("results").hidden = false;
   wireUnlock();
   const pdfBtn = $("pdf");
@@ -306,10 +314,11 @@ function renderResults(chart, inp) {
   // After the soul band: the paid-dossier teaser, only on a personal chart.
   $("after").innerHTML = fullMode ? `
     <aside class="gc-more">
-      <span class="gc-eyebrow">Coming next</span>
-      <p class="gc-more-title">Your chart has more to say</p>
-      <p>Your chart also holds these points, each with its own Sabian symbol. They will be part of the personal Sabian dossier, with Sylvain's writing on every degree. As a subscriber, you will hear first when it opens.</p>
-      <ul class="gc-more-list"><li>Chiron</li><li>Black Moon Lilith</li><li>Part of Fortune${known ? "" : " <small>(needs a birth time)</small>"}</li><li>Ceres</li><li>Pallas</li><li>Juno</li><li>Vesta</li></ul>
+      <span class="gc-eyebrow">Going deeper</span>
+      <p class="gc-more-title">${MORE_TITLE}</p>
+      <p>${escapeHtml(MORE_TEXT)}</p>
+      <ul class="gc-more-list"><li>Aspects</li><li>House rulers</li><li>Chiron</li><li>Black Moon Lilith</li><li>Part of Fortune</li><li>Asteroids</li><li>Transits</li></ul>
+      <a class="gc-primary gc-more-btn" href="${SERVICES_URL}">${MORE_LINK}</a>
     </aside>` : "";
 }
 
@@ -496,8 +505,10 @@ async function downloadPdf(btn) {
 
     // coming next + footer notes
     need(40); y += 2;
-    para("Coming next: the personal Sabian dossier", 12, TEXT, "bold"); y += 1.5;
-    para(`Your chart also holds Chiron, Black Moon Lilith, ${known ? "the Part of Fortune, " : ""}Ceres, Pallas, Juno and Vesta, each with its own Sabian symbol. They will be part of the personal Sabian dossier, with Sylvain's writing on every degree. As a subscriber, you will hear first when it opens.`, 10);
+    para(MORE_TITLE, 12, TEXT, "bold"); y += 1.5;
+    para(MORE_TEXT, 10); y += 2;
+    need(6); doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...BAND);
+    doc.textWithLink(MORE_LINK + ": gamlahealing.com/collections/astrology-services", M, y + 3.5, { url: SERVICES_URL }); y += 6;
     y += 6;
     para("Positions from the Swiss Ephemeris (Astrodienst). Tropical zodiac, Placidus houses, mean lunar nodes. Sabian degrees use the Rudhyar and Wheeler round-up convention: 20°02' falls in the 21st degree.", 8, MUTED);
     const n = doc.getNumberOfPages();

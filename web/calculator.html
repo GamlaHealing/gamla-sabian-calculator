@@ -7,7 +7,7 @@
    overridden from the Shopify theme editor. Fonts are NOT set here: headings and body text
    inherit the theme's own fonts, so the page always matches the rest of the site.
    Layout: alternating full-width bands like the homepage. White (form + results),
-   purple (soul direction), white (dossier waitlist + notes). */
+   purple (soul direction), white (summary note + services link + notes). */
 .gc {
   --gc-bg: #FDFCFE;          /* site background */
   --gc-text: #4A4560;        /* site headings and body */
@@ -133,6 +133,9 @@
 .gc .gc-soul-list li { display: grid; gap: .35rem; margin: 0; }
 .gc .gc-tag { font-weight: 600; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
 .gc .gc-soul-text { font-size: 1.02rem; line-height: 1.7; }
+.gc .gc-sky { display: block; width: 100%; max-width: 36rem; height: auto; margin: 0 auto -.25rem; }
+.gc .gc-rest-title { margin-top: .75rem; margin-bottom: -1rem; }
+.gc .gc-more-btn { display: inline-block; text-decoration: none; color: #FFFFFF; margin-top: .25rem; }
 .gc footer { font-size: .8rem; color: var(--gc-muted); display: grid; gap: .4rem; border-top: 1px solid var(--gc-line); padding-top: 1.25rem; text-align: center; }
 .gc footer p { max-width: none; }
 </style>
@@ -140,6 +143,7 @@
 <div class="gc">
 <div class="gc-band gc-light"><div class="gc-wrap">
   <header>
+    <svg class="gc-sky" viewBox="0 0 640 120" role="presentation" aria-hidden="true" focusable="false"><path d="M40 104 Q320 -6 600 104" fill="none" stroke="#A79FE0" stroke-width="1" stroke-dasharray="2 6" opacity=".8"/><circle cx="320" cy="48" r="13" fill="none" stroke="#C9A45C" stroke-width="2"/><circle cx="320" cy="48" r="3" fill="#C9A45C" opacity="1"/><line x1="339.0" y1="48.0" x2="347.0" y2="48.0" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="336.5" y1="57.5" x2="343.4" y2="61.5" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="329.5" y1="64.5" x2="333.5" y2="71.4" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="320.0" y1="67.0" x2="320.0" y2="75.0" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="310.5" y1="64.5" x2="306.5" y2="71.4" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="303.5" y1="57.5" x2="296.6" y2="61.5" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="301.0" y1="48.0" x2="293.0" y2="48.0" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="303.5" y1="38.5" x2="296.6" y2="34.5" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="310.5" y1="31.5" x2="306.5" y2="24.6" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="320.0" y1="29.0" x2="320.0" y2="21.0" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="329.5" y1="31.5" x2="333.5" y2="24.6" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><line x1="336.5" y1="38.5" x2="343.4" y2="34.5" stroke="#C9A45C" stroke-width="2" stroke-linecap="round"/><path d="M200 50a17 17 0 1 0 14 26a14 14 0 1 1 -14 -26z" fill="#6760AF"/><g transform="rotate(-18 446 64)"><ellipse cx="446" cy="64" rx="24" ry="6" fill="none" stroke="#C9A45C" stroke-width="2"/></g><circle cx="446" cy="64" r="11" fill="#A79FE0" opacity="1"/><path d="M435.6 67.5 A11 11 0 0 0 456.4 60.5" fill="none" stroke="#C9A45C" stroke-width="2"/><circle cx="110" cy="86" r="6" fill="#C9A45C" opacity="1"/><circle cx="530" cy="86" r="5" fill="#6760AF" opacity="1"/><circle cx="262" cy="30" r="3" fill="#A79FE0" opacity="1"/><circle cx="392" cy="26" r="2.5" fill="#C9A45C" opacity="1"/><circle cx="70" cy="40" r="2" fill="#A79FE0" opacity="1"/><circle cx="580" cy="36" r="2" fill="#C9A45C" opacity="1"/><path d="M150 23Q150 32 159 32Q150 32 150 41Q150 32 141 32Q150 32 150 23Z" fill="#C9A45C" opacity="1"/><path d="M490 20Q490 28 498 28Q490 28 490 36Q490 28 482 28Q490 28 490 20Z" fill="#6760AF" opacity="1"/><path d="M372 86Q372 92 378 92Q372 92 372 98Q372 92 366 92Q372 92 372 86Z" fill="#C9A45C" opacity="0.9"/><path d="M256 93Q256 98 261 98Q256 98 256 103Q256 98 251 98Q256 98 256 93Z" fill="#6760AF" opacity="0.8"/><path d="M30 69Q30 74 35 74Q30 74 30 79Q30 74 25 74Q30 74 30 69Z" fill="#C9A45C" opacity="0.8"/><path d="M612 64Q612 70 618 70Q612 70 612 76Q612 70 606 70Q612 70 612 64Z" fill="#A79FE0" opacity="1"/><path d="M560 104Q560 108 564 108Q560 108 560 112Q560 108 556 108Q560 108 560 104Z" fill="#C9A45C" opacity="0.8"/><path d="M84 104Q84 108 88 108Q84 108 84 112Q84 108 80 108Q84 108 84 104Z" fill="#6760AF" opacity="0.7"/><path d="M408 54.5Q408 58 411.5 58Q408 58 408 61.5Q408 58 404.5 58Q408 58 408 54.5Z" fill="#A79FE0" opacity="1"/><path d="M230 16Q230 20 234 20Q230 20 230 24Q230 20 226 20Q230 20 230 16Z" fill="#E3CC93" opacity="1"/></svg>
     <span class="gc-eyebrow">Gamla Healing · Sabian Symbols</span>
     <h1>Find the Sabian symbols of your birth chart</h1>
     <p>Enter your birth details to see the Sabian symbols of your Sun, Moon and Ascendant straight away, each linked to its full article. Your complete chart (the Midheaven, every planet, both lunar nodes and your soul direction) comes as a personal PDF by email. The calculation runs in your own browser, and your details are only sent if you ask for your full chart.</p>
