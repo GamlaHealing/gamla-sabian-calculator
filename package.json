@@ -1,0 +1,14 @@
+{
+  "name": "gamla-sabian-calculator",
+  "version": "0.1.0",
+  "description": "Free Sabian symbol calculator for gamlahealing.com. Browser port of the Python reference engine.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "test": "node tests/run_golden.mjs",
+    "build-data": "python3 reference/build_degree_json.py"
+  },
+  "dependencies": {
+    "swisseph-wasm": "0.1.0"
+  }
+}

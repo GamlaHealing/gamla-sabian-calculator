@@ -1,0 +1,6 @@
+{
+  "sections": {
+    "calculator": { "type": "sabian-calculator", "settings": {} }
+  },
+  "order": ["calculator"]
+}

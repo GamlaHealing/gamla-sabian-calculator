@@ -1,0 +1,234 @@
+{%- comment -%} Gamla Healing Sabian calculator. Generated from web/markup.html by reference/build_web.sh. Edit the source, not this file. {%- endcomment -%}
+<style>
+/* Gamla Sabian calculator. Scoped under .gc so nothing leaks into the theme.
+   Colours default to the live gamlahealing.com palette (sampled from the site) and can be
+   overridden from the Shopify theme editor. Fonts are NOT set here: headings and body text
+   inherit the theme's own fonts, so the page always matches the rest of the site.
+   Layout: alternating full-width bands like the homepage. White (form + results),
+   purple (soul direction), white (dossier waitlist + notes). */
+.gc {
+  --gc-bg: #FDFCFE;          /* site background */
+  --gc-text: #4A4560;        /* site headings and body */
+  --gc-band: #6760AF;        /* site purple bands */
+  --gc-band-text: #FDFCFE;   /* text on purple */
+  --gc-button: #7F77DD;      /* site buttons */
+  --gc-muted: #77738A;
+  --gc-line: #E6E2F1;
+  --gc-panel: #F6F4FB;
+  --gc-error: #B3261E;
+  color: var(--gc-text); background: var(--gc-bg); color-scheme: light;
+}
+.gc *, .gc *::before, .gc *::after { box-sizing: border-box; }
+.gc [hidden] { display: none !important; }
+.gc .gc-band { width: 100%; }
+.gc .gc-light { background: var(--gc-bg); color: var(--gc-text); }
+.gc .gc-dark { background: var(--gc-band); color: var(--gc-band-text); }
+.gc .gc-wrap { max-width: 52rem; margin: 0 auto; padding-inline: 1.25rem; padding-block: 3rem; display: grid; gap: 2.25rem; }
+.gc h1, .gc h2 { color: inherit; margin: 0; line-height: 1.15; text-wrap: balance; }
+.gc h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); text-align: center; }
+.gc h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); text-align: center; }
+.gc p { margin: 0; max-width: 65ch; }
+.gc a { color: var(--gc-band); text-underline-offset: 3px; }
+.gc .gc-dark a { color: var(--gc-band-text); }
+.gc a:focus-visible, .gc button:focus-visible, .gc input:focus-visible, .gc select:focus-visible { outline: 2px solid var(--gc-button); outline-offset: 2px; }
+.gc .gc-eyebrow { display: block; text-align: center; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
+.gc header { display: grid; gap: .9rem; justify-items: center; text-align: center; }
+.gc header p { font-size: 1.05rem; }
+
+.gc form { background: var(--gc-panel); border: 1px solid var(--gc-line); border-radius: 16px; padding: 1.5rem; display: grid; gap: 1.1rem; margin: 0; }
+.gc .gc-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; align-items: start; }
+.gc .gc-field { display: grid; gap: .35rem; min-width: 0; }
+.gc label { display: block; font-weight: 600; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gc-text); margin: 0; }
+.gc input[type="date"], .gc input[type="time"], .gc input[type="text"], .gc input[type="number"], .gc select {
+  font: inherit; color: var(--gc-text); background: var(--gc-bg); border: 1px solid var(--gc-line); border-radius: 10px;
+  padding: 0 .8rem; width: 100%; min-width: 0; height: 2.9rem; line-height: 2.9rem; margin: 0; box-shadow: none;
+  -webkit-appearance: none; appearance: none; display: block;
+}
+/* Date and time pickers render with different inner heights per browser; normalise them. */
+.gc input[type="date"]::-webkit-date-and-time-value, .gc input[type="time"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.gc input[type="date"]::-webkit-datetime-edit, .gc input[type="time"]::-webkit-datetime-edit { padding: 0; line-height: 2.9rem; }
+.gc select { -webkit-appearance: auto; appearance: auto; }
+.gc input:disabled { opacity: .45; }
+.gc .gc-check { display: flex; align-items: center; gap: .5rem; font-size: .9rem; }
+.gc .gc-check input { width: auto; margin: 0; accent-color: var(--gc-button); }
+.gc .gc-check label { display: inline; font-size: inherit; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.gc .gc-hint { font-size: .9rem; opacity: .85; }
+.gc .gc-place-wrap { position: relative; }
+.gc .gc-suggest { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); background: var(--gc-bg); border: 1px solid var(--gc-line); border-radius: 10px; margin: 0; padding: .25rem 0; list-style: none; max-height: 18rem; overflow-y: auto; box-shadow: 0 8px 24px rgba(40, 30, 90, .12); }
+.gc .gc-suggest li { padding: .45rem .8rem; cursor: pointer; display: flex; justify-content: space-between; gap: 1rem; margin: 0; }
+.gc .gc-suggest li small { color: var(--gc-muted); white-space: nowrap; }
+.gc .gc-suggest li[aria-selected="true"], .gc .gc-suggest li:hover { background: var(--gc-panel); }
+.gc .gc-place-meta { font-size: .85rem; color: var(--gc-muted); font-variant-numeric: tabular-nums; }
+.gc .gc-linkish { background: none; border: 0; padding: 0; font: inherit; font-size: .85rem; color: var(--gc-band); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; justify-self: start; min-height: 0; }
+.gc .gc-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem; }
+.gc .gc-primary { font: inherit; font-size: 1.05rem; background: var(--gc-button); color: #FFFFFF; border: 0; border-radius: 16px; padding: .9rem 2rem; cursor: pointer; }
+.gc .gc-primary:hover { filter: brightness(.95); }
+.gc .gc-primary:disabled { opacity: .55; cursor: wait; }
+.gc .gc-status { font-size: .9rem; color: var(--gc-muted); }
+.gc .gc-error { color: var(--gc-error); }
+
+.gc .gc-results { display: grid; gap: 1.5rem; }
+.gc .gc-example { font-size: .85rem; font-weight: 600; color: var(--gc-band); text-align: center; max-width: none; }
+.gc .gc-meta { font-size: .9rem; color: var(--gc-muted); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem 1.25rem; }
+.gc .gc-notes { display: grid; gap: .6rem; }
+.gc .gc-note { background: var(--gc-panel); border: 1px solid var(--gc-line); border-left: 4px solid var(--gc-band); border-radius: 10px; padding: .85rem 1rem; font-size: .95rem; max-width: none; }
+.gc .gc-note strong { font-weight: 600; }
+.gc .gc-ledger-scroll { overflow-x: auto; }
+.gc table.gc-ledger { width: 100%; border-collapse: separate; border-spacing: 0 .35rem; font-size: .95rem; margin: 0; border: 0; }
+.gc .gc-ledger th { font-weight: 600; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gc-muted); text-align: left; padding: .5rem .6rem; border: 0; border-bottom: 1px solid var(--gc-line); background: none; }
+.gc .gc-ledger td { padding: .85rem .7rem; border: 0; vertical-align: top; background: var(--gc-panel); color: var(--gc-text); border-top: 1px solid var(--gc-line); border-bottom: 1px solid var(--gc-line); }
+/* Odd rows share the style of the Ascendant note: light lavender panel with a purple bar on the left */
+.gc .gc-ledger td:first-child { border-left: 4px solid var(--gc-band); border-radius: 12px 0 0 12px; }
+.gc .gc-ledger td:last-child { border-right: 1px solid var(--gc-line); border-radius: 0 12px 12px 0; }
+/* Alternating rows, Sun white, Moon purple, Ascendant white, and so on */
+.gc .gc-ledger tbody tr:nth-child(even) td { background: var(--gc-band); color: var(--gc-band-text); border-color: var(--gc-band); }
+.gc .gc-ledger tbody tr:nth-child(even) .gc-deg,
+.gc .gc-ledger tbody tr:nth-child(even) .gc-kw,
+.gc .gc-ledger tbody tr:nth-child(even) .gc-dup,
+.gc .gc-ledger tbody tr:nth-child(even) a { color: var(--gc-band-text); }
+.gc .gc-ledger tbody tr:nth-child(even) .gc-kw, .gc .gc-ledger tbody tr:nth-child(even) .gc-dup { opacity: .85; }
+.gc .gc-ledger td.gc-pt { font-weight: 600; white-space: nowrap; }
+.gc .gc-ledger td.gc-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gc .gc-deg { font-weight: 600; color: var(--gc-band); white-space: nowrap; }
+.gc .gc-kw { display: block; font-size: .85rem; color: var(--gc-muted); }
+.gc .gc-dup { display: block; font-size: .8rem; color: var(--gc-muted); font-style: italic; }
+@media (max-width: 40rem) {
+  .gc table.gc-ledger thead { display: none; }
+  .gc table.gc-ledger, .gc .gc-ledger tbody, .gc .gc-ledger tr, .gc .gc-ledger td { display: block; width: 100%; }
+  .gc .gc-ledger tbody { display: grid; gap: .5rem; }
+  .gc .gc-ledger tr { border: 1px solid var(--gc-line); border-radius: 12px; padding: .85rem 1rem; display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; background: var(--gc-panel); border-left: 4px solid var(--gc-band); }
+  .gc .gc-ledger tbody tr:nth-child(even) { background: var(--gc-band); border-color: var(--gc-band); }
+  .gc .gc-ledger td, .gc .gc-ledger td:first-child, .gc .gc-ledger td:last-child { border: 0; border-radius: 0; padding: 0; background: none; }
+  .gc .gc-ledger tbody tr:nth-child(even) td { background: none; }
+  .gc .gc-ledger td.gc-pos { text-align: right; }
+  .gc .gc-ledger td.gc-hs { grid-column: 2; text-align: right; font-size: .85rem; opacity: .8; }
+  .gc .gc-ledger td.gc-hs:empty { display: none; }
+  .gc .gc-ledger td.gc-sab, .gc .gc-ledger td.gc-art { grid-column: 1 / -1; }
+}
+.gc .gc-more { display: grid; gap: .9rem; justify-items: center; text-align: center; border: 1px solid var(--gc-band); border-radius: 16px; padding: 1.75rem 1.5rem; margin-top: .5rem; background: var(--gc-bg); }
+.gc .gc-more-title { font-size: 1.35rem; font-weight: 600; max-width: none; }
+.gc .gc-more-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.gc .gc-more-list li { margin: 0; padding: .4rem .9rem; border-radius: 999px; background: var(--gc-panel); border: 1px solid var(--gc-line); font-size: .92rem; }
+.gc .gc-more-list small { opacity: .75; }
+.gc .gc-section { display: grid; gap: 1rem; justify-items: center; text-align: center; }
+.gc .gc-soul-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.6rem; text-align: left; max-width: 44rem; }
+.gc .gc-soul-list li { display: grid; gap: .35rem; margin: 0; }
+.gc .gc-tag { font-weight: 600; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
+.gc .gc-soul-text { font-size: 1.02rem; line-height: 1.7; }
+.gc footer { font-size: .8rem; color: var(--gc-muted); display: grid; gap: .4rem; border-top: 1px solid var(--gc-line); padding-top: 1.25rem; text-align: center; }
+.gc footer p { max-width: none; }
+</style>
+
+<div class="gc" style="--gc-bg: {{ section.settings.color_bg }}; --gc-text: {{ section.settings.color_text }}; --gc-band: {{ section.settings.color_band }}; --gc-band-text: {{ section.settings.color_band_text }}; --gc-button: {{ section.settings.color_button }};">
+<div class="gc-band gc-light"><div class="gc-wrap">
+  <header>
+    <span class="gc-eyebrow">Gamla Healing · Sabian Symbols</span>
+    <h1>Find the Sabian symbol of every point in your chart</h1>
+    <p>Enter your birth details to see the Sabian symbol for your Sun, Moon, Ascendant, Midheaven, every planet and both lunar nodes, each linked to its full article. The calculation runs in your own browser, so the details you type here are not sent anywhere.</p>
+  </header>
+
+  <form id="gc-chart-form" novalidate>
+    <div class="gc-row">
+      <div class="gc-field">
+        <label for="gc-birth-date">Birth date</label>
+        <input type="date" id="gc-birth-date" required min="1800-01-01" max="2399-12-31" value="1954-01-29">
+      </div>
+      <div class="gc-field">
+        <label for="gc-birth-time">Birth time (local clock)</label>
+        <input type="time" id="gc-birth-time" value="04:30">
+        <div class="gc-check"><input type="checkbox" id="gc-no-time"><label for="gc-no-time">I don't know my birth time</label></div>
+      </div>
+    </div>
+
+    <div class="gc-field">
+      <label for="gc-place">Birth place</label>
+      <div class="gc-place-wrap">
+        <input type="text" id="gc-place" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="gc-place-list" placeholder="Start typing a town or city" value="Kosciusko, MS, United States">
+        <ul class="gc-suggest" id="gc-place-list" role="listbox" hidden></ul>
+      </div>
+      <div class="gc-place-meta" id="gc-place-meta">33.0580° N, 89.5896° W · America/Chicago</div>
+      <button type="button" class="gc-linkish" id="gc-toggle-manual" aria-expanded="false">My town is not listed: enter coordinates</button>
+    </div>
+
+    <div class="gc-row" id="gc-manual" hidden>
+      <div class="gc-field"><label for="gc-lat">Latitude (north +, south −)</label><input type="number" id="gc-lat" step="0.0001" min="-90" max="90" value="33.058"></div>
+      <div class="gc-field"><label for="gc-lon">Longitude (east +, west −)</label><input type="number" id="gc-lon" step="0.0001" min="-180" max="180" value="-89.5896"></div>
+      <div class="gc-field"><label for="gc-tz">Time zone</label><select id="gc-tz"></select></div>
+    </div>
+
+    <div class="gc-actions">
+      <button type="submit" class="gc-primary" id="gc-go" disabled>Loading ephemeris…</button>
+      <span class="gc-status" id="gc-status" role="status"></span>
+    </div>
+  </form>
+
+  <div class="gc-results" id="gc-results" hidden aria-live="polite"></div>
+</div></div>
+
+<div class="gc-band gc-dark" id="gc-soul" hidden><div class="gc-wrap"><section class="gc-section">
+    <span class="gc-eyebrow">Soul direction</span>
+    <h2>Where your chart points you</h2>
+    <p class="gc-hint">Read through the lens of evolutionary astrology: Pluto shows what your soul is working through, and the North Node shows the direction of growth.</p>
+    <ul class="gc-soul-list" id="gc-soul-list"></ul>
+  </section></div></div>
+
+<div class="gc-band gc-light"><div class="gc-wrap">
+  <section class="gc-section" id="gc-dossier">
+    <span class="gc-eyebrow">Your full dossier</span>
+    <h2>Go deeper than the symbol names</h2>
+    <p>The personal Sabian dossier is in preparation: every point in your chart, including Chiron, Lilith, the Part of Fortune and the asteroids, with Sylvain's writing on each degree bound into one document. Join the waitlist to hear first when it opens.</p>
+    {%- if section.settings.klaviyo_form_id != blank -%}
+    <div class="klaviyo-form-{{ section.settings.klaviyo_form_id }}"></div>
+    {%- endif -%}
+  </section>
+
+  <footer>
+    <p>Positions from the Swiss Ephemeris (Astrodienst). Tropical zodiac, Placidus houses, mean lunar nodes. Sabian degrees use the Rudhyar and Wheeler round-up convention: 20°02′ falls in the 21st degree.</p>
+    <p>Place data from <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a>, licensed CC BY 4.0. {%- if section.settings.source_url != blank -%}<a href="{{ section.settings.source_url }}" target="_blank" rel="noopener">Calculator source code</a> licensed AGPL-3.0.{%- endif -%}</p>
+  </footer>
+</div></div>
+</div>
+
+{%- if section.settings.cdn_base != blank -%}
+<script type="module" src="{{ section.settings.cdn_base }}/calc.js"></script>
+{%- else -%}
+<p style="text-align:center;color:#B3261E">Sabian calculator: set the "Calculator files URL" in the theme editor.</p>
+{%- endif -%}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Sabian Symbol Calculator",
+  "url": "{{ shop.url }}{{ request.path }}",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "description": "Free calculator that finds the Sabian symbol for every point in your birth chart, using the Swiss Ephemeris and the Rudhyar and Wheeler round-up convention, with a full article for each degree.",
+  "publisher": { "@type": "Organization", "name": "Gamla Healing", "url": "{{ shop.url }}" }
+}
+</script>
+
+{% schema %}
+{
+  "name": "Sabian calculator",
+  "tag": "section",
+  "class": "section-sabian-calculator",
+  "settings": [
+    { "type": "text", "id": "cdn_base", "label": "Calculator files URL",
+      "info": "jsDelivr URL of the dist folder, e.g. https://cdn.jsdelivr.net/gh/USERNAME/gamla-sabian-calculator@v1.0.0/dist (no trailing slash)" },
+    { "type": "text", "id": "klaviyo_form_id", "label": "Klaviyo embedded form ID",
+      "info": "The 6-character ID of the waitlist form (Klaviyo > Sign-up forms > embed code)." },
+    { "type": "url", "id": "source_url", "label": "Source code link (AGPL)",
+      "info": "Link to the public GitHub repository." },
+    { "type": "header", "content": "Colours (defaults match gamlahealing.com)" },
+    { "type": "color", "id": "color_bg", "label": "Background", "default": "#FDFCFE" },
+    { "type": "color", "id": "color_text", "label": "Text and headings", "default": "#4A4560" },
+    { "type": "color", "id": "color_band", "label": "Purple band and accents", "default": "#6760AF" },
+    { "type": "color", "id": "color_band_text", "label": "Text on purple band", "default": "#FDFCFE" },
+    { "type": "color", "id": "color_button", "label": "Button", "default": "#7F77DD" }
+  ],
+  "presets": [{ "name": "Sabian calculator" }]
+}
+{% endschema %}

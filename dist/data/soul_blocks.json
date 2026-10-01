@@ -1,0 +1,202 @@
+{
+ "_about": "Pre-written soul-direction blocks. Assembled at runtime by exact key, never generated. status: draft until Sylvain approves each block.",
+ "pluto_sign": {
+  "Cancer": {
+   "years": "roughly 1914 to 1939",
+   "status": "approved",
+   "text": "You were born with Pluto in Cancer, as was everyone born between roughly 1914 and 1939. This generation grew up through the Great Depression and the Second World War, when a home, a family or a homeland could disappear overnight. The soul's intention here concerns emotional security: finding where safety comes from once the house, the parent or the country can no longer provide it. The inherited pattern is to cling to family and tradition as protection. The growth lies in building that security inside yourself, so you can shelter others without needing them to stay."
+  },
+  "Leo": {
+   "years": "roughly 1939 to 1957",
+   "status": "approved",
+   "text": "Pluto in Leo marks everyone born between roughly 1939 and 1957, the generation raised in the rebuilding after the Second World War and the first to grow up with television, rock and roll and a culture built around the individual. Your soul's intention is creative self-realisation: discovering what is yours to create and standing behind it in public. The shadow is a hunger for recognition that turns you into the centre of every room. The work is to create from your own source and to give what you make to others, whether or not they applaud."
+  },
+  "Virgo": {
+   "years": "roughly 1957 to 1972",
+   "status": "approved",
+   "text": "With Pluto in Virgo, you belong to the generation born between roughly 1957 and 1972. It came of age as the postwar boom broke down into oil shocks, recessions and the end of the job for life. The soul's intention is purification through service and self-improvement. The inherited pattern is a relentless inner critic, a sense of never being good enough, and a habit of working to exhaustion to earn your place. Your task is to serve from humility rather than guilt, and to separate what needs fixing from what needs acceptance."
+  },
+  "Libra": {
+   "years": "roughly 1972 to 1984",
+   "status": "approved",
+   "text": "Pluto in Libra covers everyone born between roughly 1972 and 1984. This generation grew up as divorce became common and the old rules of marriage and gender were rewritten around them. Your soul's intention concerns relationship itself: learning equality, fairness and the balance between giving and receiving. The familiar trap is defining yourself through a partner or through the approval of others, and losing your own needs in the process. The growth is to become whole on your own, so that the people you choose meet you as an equal rather than fill a gap."
+  },
+  "Scorpio": {
+   "years": "roughly 1984 to 1995",
+   "status": "approved",
+   "text": "If you were born between roughly 1984 and 1995, Pluto was in its own sign, Scorpio. This generation arrived during the AIDS crisis, the last years of the Cold War and the fall of the Berlin Wall, when sex, death and power were forced into public view. Pluto here carries the intention of deep transformation: facing what is hidden, including your own wounds and desires, and allowing an old self to end so a new one can form. The shadow is control, mistrust and the need to hold power over every situation. Your growth comes from meeting change instead of managing it."
+  },
+  "Sagittarius": {
+   "years": "roughly 1995 to 2008",
+   "status": "approved",
+   "text": "Pluto was in Sagittarius for everyone born between roughly 1995 and 2008, the first generation to grow up online, with every belief system in the world one search away. Your soul's intention is the search for truth: telling natural law apart from inherited dogma. The trap is holding your beliefs as the only right ones, or drifting between teachings without committing to any. Your growth lies in testing ideas against lived experience and keeping what holds up there, whoever taught it to you."
+  },
+  "Capricorn": {
+   "years": "roughly 2008 to 2024",
+   "status": "approved",
+   "text": "Pluto in Capricorn marks everyone born between roughly 2008 and 2024, a generation born into the financial crisis and raised as governments, institutions and economic systems showed their cracks. The soul's intention concerns structure and authority: learning which rules serve life and which only serve the people who enforce them. The inherited pattern swings between rigid control and distrust of every authority. Your growth is to become your own authority, grounded in integrity, and to build structures strong enough to carry the people who depend on them."
+  },
+  "Aquarius": {
+   "years": "roughly 2024 to 2044",
+   "status": "approved",
+   "text": "Pluto entered Aquarius in 2024 and stays until around 2044, so this placement belongs to the youngest people alive today. It arrives alongside artificial intelligence, networked communities and open questions about what a human being is for. If this is your Pluto, your soul's intention is liberation from the past: breaking conditioning that no longer fits and finding your own place within the collective. The shadow is detachment, a cool distance from feeling, and losing yourself inside the group. The growth is to stay fully yourself while contributing your difference to the whole."
+  }
+ },
+ "pluto_house": {
+  "1": {
+   "status": "approved",
+   "text": "With Pluto in your first house, this work happens through your own presence and the way you meet the world. People often feel your intensity before you say a word. Early life may have required you to defend your right to exist on your own terms, and that can harden into a reflex of control or a need to be untouchable. Each time you act from your own instinct instead of from armour, you become someone new, and the people around you learn they can meet you there."
+  },
+  "2": {
+   "status": "approved",
+   "text": "In your chart Pluto sits in the second house, so this work runs through what you own, what you earn and what you believe you are worth. Money, possessions and your body's resources carry more weight for you than they seem to for others, and losing them can feel like losing yourself. Under pressure you hold on, guarding what you have and measuring your value by it. What changes you is discovering the resources no one can take: your skills, your values and your capacity to rebuild from very little."
+  },
+  "3": {
+   "status": "approved",
+   "text": "Your Pluto falls in the third house, where the soul works through the mind, language and the everyday exchange of information. You can be relentless in wanting to know, and words can become your weapon or your shield. Siblings, early schooling and the people nearby often left strong marks. When threatened, you may defend one set of ideas as the whole picture, or argue to win instead of to learn. Your mind deepens each time new information is allowed to change it, and your speech gains power when it helps others think for themselves."
+  },
+  "4": {
+   "status": "approved",
+   "text": "Home is where this work happens for you: Pluto in the fourth house points to family, ancestry and the emotional foundations laid in childhood. The household you grew up in may have carried secrets, loss or a parent whose power shaped everything. As an adult you can recreate that same climate without meaning to, or keep people at a distance to stay safe. Healing here means parenting yourself: understanding what your family passed down, and choosing which parts of it you carry forward."
+  },
+  "5": {
+   "status": "approved",
+   "text": "Pluto in your fifth house directs this work into creativity, romance, play and children. You want your creations, and the people you love, to reflect who you are, which is why rejection or indifference cuts deep. Creating or loving in order to be seen turns every stage into a test of your worth, and that is the habit this placement asks you to outgrow. Something shifts when you create because the work itself asks to exist, and when you love people as they are instead of as mirrors."
+  },
+  "6": {
+   "status": "approved",
+   "text": "With Pluto in the sixth house, daily labour, health, routine and service become the arena. You tend to meet crisis through work and the body: burnout, illness, or jobs that demand more than they give. A harsh inner inspector often runs underneath, checking every task for the flaw, which keeps you over-preparing and over-serving. This placement asks you to refine your skills in service of something larger than personal approval, and to treat your body and its limits as information instead of failure."
+  },
+  "7": {
+   "status": "approved",
+   "text": "Close partnership is the crucible here. Pluto in your seventh house works through marriage, business partners and anyone you meet one to one. Relationships tend to be intense, and power often sits at their centre, whether you hold it or hand it over. You may attract people who carry qualities you have not yet claimed in yourself. Equality is the lesson: learning what you need, stating it, and giving others the same freedom, so that each relationship transforms both people instead of absorbing one of them."
+  },
+  "8": {
+   "status": "approved",
+   "text": "Pluto in the eighth house is Pluto in its natural home, and the work it brings is deep and often unseen. It moves through shared money, intimacy, inheritance, debt, sexuality and death, the places where you merge with another person and risk being changed. You may have met loss or betrayal early, and learned to read hidden motives before anyone speaks. Controlling others feels like safety, yet it keeps you guarded. Trusting transformation itself, and allowing intimacy to change you without disappearing into it, is what this house asks."
+  },
+  "9": {
+   "status": "approved",
+   "text": "Belief, higher learning, travel and the search for meaning carry the weight in your chart, because Pluto sits in your ninth house. You need your life to make sense within a larger picture, and a single conviction can shape every choice you make. Teachers, religions or foreign cultures may have transformed you, sometimes by disappointing you. Certainty is the risk: defending a worldview because giving it up feels like losing the ground under your feet. A philosophy built from what you have lived, and held open enough to keep learning, serves you far better."
+  },
+  "10": {
+   "status": "approved",
+   "text": "Your Pluto is in the tenth house, which places this work in career, public role and reputation. You feel a strong pull toward a position of influence, and how the world sees you matters more than you may admit. Authority figures, often a parent, shaped you forcefully, and you may repeat or resist their style of power. What you are here to build is a public life that expresses your own conscience. Standing that rests on integrity instead of status survives the collapses and reinventions this placement tends to bring."
+  },
+  "11": {
+   "status": "approved",
+   "text": "Friends, groups, networks and your hopes for the future are where Pluto in the eleventh house does its work. You tend to feel most yourself among people who share a cause, and exclusion from a group can wound deeply. Two old reflexes pull against each other: losing your individuality in order to belong, or standing so far apart that no one can reach you. Your place in any community comes from contributing your own difference, and from pursuing the future you believe in even when the group around you changes."
+  },
+  "12": {
+   "status": "approved",
+   "text": "In the twelfth house, Pluto turns this work inward, toward solitude, the unconscious, spirituality and everything that dissolves the ordinary self. You may carry fears or memories with no clear source, and feel pulled toward retreat when life becomes loud. Escape is the familiar exit: into fantasy, substances, overwork or other people's suffering. Meeting what lives beneath the surface with awareness changes that, and in that inner depth you can find a steadiness no outer event can remove."
+  }
+ },
+ "_approved": {
+  "pluto_sign": "2026-09-29",
+  "pluto_house": "2026-09-29",
+  "node_sign": "2026-09-29",
+  "node_house": "2026-09-29",
+  "note": "Approved by Sylvain 'for now'; open to later revision."
+ },
+ "node_sign": {
+  "Aries": {
+   "status": "approved",
+   "text": "Your North Node in Aries points toward independence, with the South Node in Libra marking the ground you already know well. You arrive skilled at reading others, keeping the peace and shaping yourself around a partner's needs, often so smoothly that your own wishes go unspoken. The direction now is to act on your own impulses, to take the first step without waiting for agreement, and to accept that some people will be displeased. Courage used on your own behalf is the skill this life asks you to build."
+  },
+  "Taurus": {
+   "status": "approved",
+   "text": "With the North Node in Taurus and the South Node in Scorpio, you come in familiar with crisis, intensity and other people's hidden depths. Upheaval can feel more like home than calm, and you may create it when life grows quiet. Your direction runs toward simplicity: steady income, a body you look after, pleasures that ask nothing complicated of you, and values you set for yourself. Calm, for you, is the place where depth can finally settle."
+  },
+  "Gemini": {
+   "status": "approved",
+   "text": "The North Node in Gemini asks you to become curious again, while the South Node in Sagittarius shows how easily you reach for the big answer. You arrive with strong beliefs and a gift for the grand picture, which can make you preach before you have listened. The direction here is toward questions, conversation and the details of what other people think and mean. Each exchange in which you learn something you did not expect moves you forward."
+  },
+  "Cancer": {
+   "status": "approved",
+   "text": "Your North Node in Cancer, opposite a South Node in Capricorn, points from achievement toward belonging. Responsibility, control and public standing come easily to you, and you may measure your worth by what you carry for others. The pull of this life is toward the inner world: feelings allowed without justification, a home that nourishes you, and the courage to need people. The softness you once took for weakness becomes the source of your strength."
+  },
+  "Leo": {
+   "status": "approved",
+   "text": "With the North Node in Leo and the South Node in Aquarius, you know how to belong to a group and serve a cause, often while keeping your own heart at a safe distance. Detachment feels comfortable, and standing out can feel risky or even selfish. Your direction is toward personal creative expression: saying what you want, making something that bears your name, and allowing yourself to be seen with warmth. The group benefits most when you bring it your whole self."
+  },
+  "Virgo": {
+   "status": "approved",
+   "text": "Your North Node in Virgo sits opposite a South Node in Pisces. You arrive sensitive, imaginative and open to everything, which also leaves you prone to drifting, rescuing others or escaping when reality presses in. The direction now is toward form: daily routines, practical skills, clear boundaries and work you can hold in your hands. Compassion lasts longer when it runs through a method, and careful service each day grounds what your spirit already knows."
+  },
+  "Libra": {
+   "status": "approved",
+   "text": "The North Node in Libra points you toward partnership, away from a South Node in Aries that has made you self-reliant to a fault. You know how to act alone, decide fast and fight for yourself, and needing another person can seem like a defeat. Your direction lies in cooperation: listening before acting, weighing another's view as seriously as your own, and building with a partner what you could never build alone. Fairness becomes a strength you practise, one relationship at a time."
+  },
+  "Scorpio": {
+   "status": "approved",
+   "text": "With the North Node in Scorpio and the South Node in Taurus, you arrive attached to comfort, security and things staying as they are. Holding on feels safe, even when a situation has stopped feeding you. The direction of this life is toward transformation: sharing resources, allowing intimacy to reach you, facing what frightens you and accepting endings. Each time you release a security that has turned into a cage, you find more strength than you expected underneath it."
+  },
+  "Sagittarius": {
+   "status": "approved",
+   "text": "Your North Node in Sagittarius opposes a South Node in Gemini. You arrive quick-minded and well informed, able to see every side, and sometimes stalled by that very ability. Collecting facts and opinions can stand in for deciding what you believe. Your direction runs toward meaning: trusting intuition, committing to a philosophy you can live by, and seeking wider horizons through study or travel. A clear sense of what you stand for gives your restless mind somewhere to go."
+  },
+  "Capricorn": {
+   "status": "approved",
+   "text": "The North Node in Capricorn points from the private world toward public responsibility, with the South Node in Cancer marking where you feel safest. Family, home and emotional closeness come naturally, and you may retreat into them when the outside world asks more of you. Your direction is toward maturity and authority: setting goals, keeping commitments and taking a visible role that you define yourself. Your care for others gains reach once it has structure behind it."
+  },
+  "Aquarius": {
+   "status": "approved",
+   "text": "With the North Node in Aquarius and the South Node in Leo, you arrive knowing how to shine. Recognition, creative pride and being at the centre come easily, and the need for applause can quietly steer your choices. The direction of this life is toward the collective: friendships among equals, causes larger than you, and ideas that serve the future more than your own image. Your originality lands hardest when it is offered to the group instead of the spotlight."
+  },
+  "Pisces": {
+   "status": "approved",
+   "text": "Your North Node in Pisces sits opposite a South Node in Virgo. You arrive competent, analytical and quick to find what is wrong, including in yourself, and control through detail feels like safety. The direction now is toward surrender: trusting what you cannot measure, making room for rest, prayer or art, and forgiving imperfection in yourself and others. Faith, for you, becomes a practice that loosens the grip of constant correction."
+  }
+ },
+ "node_house": {
+  "1": {
+   "status": "approved",
+   "text": "In the first house, the North Node calls you to author your own life. Its partner, the South Node in the seventh, shows a long habit of living through relationships: waiting for someone else to decide, or measuring yourself by how a partner responds. Moving forward means making choices before you consult anyone, taking up physical space and trusting your own instincts. Your relationships improve once they stop being the place where you disappear."
+  },
+  "2": {
+   "status": "approved",
+   "text": "A second house North Node means the South Node sits in the eighth, where the familiar territory is other people's resources, crises and emotional depths. You may know how to handle a shared bank account or someone else's breakdown better than your own simple needs. The way forward lies in building your own income, skills and values from the ground up, and in enjoying your body and the ordinary pleasures of a settled life."
+  },
+  "3": {
+   "status": "approved",
+   "text": "A third house North Node turns you toward the near and the practical, while the South Node in the ninth keeps looking to the horizon. Big philosophies, far-off places and final answers feel familiar, and the neighbour, the sibling and the conversation in front of you can seem small. Moving forward means asking questions, listening closely and learning from the details of daily exchange. Wisdom you can put simply to the person beside you is the kind this placement asks for."
+  },
+  "4": {
+   "status": "approved",
+   "text": "A fourth house North Node calls you home. The South Node in the tenth shows how practised you are at career, status and public duty, sometimes at the cost of any private life at all. Progress here is measured in roots: a home that restores you, time with family or chosen family, and attention to your own feelings before the world's demands. Success outside lasts longer once something inside you is nourished."
+  },
+  "5": {
+   "status": "approved",
+   "text": "Pleasure and self-expression belong to your fifth house North Node. Its opposite, the South Node in the eleventh, has trained you well in group life: causes, networks, keeping the team together. Standing out for your own sake can feel self-indulgent. Moving forward means play, romance, children, art and the risk of making something personal and showing it. Your joy, once expressed, becomes the contribution you have been holding back."
+  },
+  "6": {
+   "status": "approved",
+   "text": "The North Node in the sixth house brings you down to earth. Opposite it, the South Node in the twelfth knows retreat, dreams and the pull of the invisible. You may drift, avoid structure or wait to be rescued from ordinary tasks. The way forward is concrete: a daily routine, a craft you improve, attention to your health and useful work for others. Spiritual insight takes root once it shows up in how you spend an ordinary Tuesday."
+  },
+  "7": {
+   "status": "approved",
+   "text": "Partnership is where your seventh house North Node leads, and self-reliance is what the South Node in the first has made your default. You can decide alone, move fast and look after yourself, and you may rarely let anyone close enough to change your plans. Progress looks like consulting, compromising and allowing another person's needs to shape your choices as much as your own. Someone who stands beside you on level ground brings out a side of you that solitude never could."
+  },
+  "8": {
+   "status": "approved",
+   "text": "Sharing is what your eighth house North Node asks of you. The South Node in the second shows a strong attachment to your own money, possessions and ways of doing things, and a deep wish for nothing to change. Progress comes through merging: joint finances, intimacy, trust, and allowing a crisis to transform you instead of simply surviving it. What opens up when you let others in outweighs what you protect by keeping them out."
+  },
+  "9": {
+   "status": "approved",
+   "text": "Your ninth house North Node faces a South Node in the third, which makes you fluent in information, facts and conversation, and quick to weigh both sides of an argument. Staying busy with details can keep you from committing to a view. Moving forward means higher learning, journeys abroad and teachers who stretch you, until you arrive at principles that guide your choices. Your ideas gain weight once they rest on a conviction you have tested for yourself."
+  },
+  "10": {
+   "status": "approved",
+   "text": "Public life is where your tenth house North Node points. The South Node in the fourth shows deep ties to home, family and private emotional safety, and a tendency to stay inside that circle when the world calls. The way forward is to accept responsibility in the world: a career with purpose, a visible role, and the discipline to see long projects through. Your sensitivity becomes an asset once it has a public form."
+  },
+  "11": {
+   "status": "approved",
+   "text": "The North Node sits in your eleventh house, and the South Node in the fifth shows how natural it is for you to take centre stage, create for recognition and follow your heart's personal wishes. Life keeps nudging you toward the group: friends, communities, shared causes and a future you help build with others. Your talents reach further when they serve something larger than your own story, and belonging among equals turns out to be a relief."
+  },
+  "12": {
+   "status": "approved",
+   "text": "The North Node in the twelfth house asks you to stop steering everything. With the South Node in the sixth, you are skilled at work, order, analysis and fixing what is broken, and rest can feel like failure. The way ahead passes through solitude, contemplation, compassion and trust in what cannot be planned. Time spent in meditation, prayer, nature or art restores the part of you that constant usefulness has worn thin."
+  }
+ }
+}
