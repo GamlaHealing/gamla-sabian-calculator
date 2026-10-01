@@ -2,7 +2,7 @@
 
 Free Sabian symbol calculator for [gamlahealing.com](https://www.gamlahealing.com). Enter birth data, see every chart point with its Sabian symbol under the Rudhyar/Wheeler round-up convention, linked to the full article for that degree.
 
-Runs entirely in the visitor's browser: birth details are never sent anywhere. Version 1.0 offers an email-only waitlist (a Klaviyo embedded form). A later version will add optional capture of birth details, with consent.
+Runs in the visitor's browser. The Sun, Moon and Ascendant are shown free; the full chart (14 placements and four soul-direction paragraphs) is sent by email as a personal link with an in-browser PDF download, after the visitor subscribes with consent. Only then are the email, birth details and placements sent to Klaviyo. See KLAVIYO.md and PRIVACY-DRAFTS.md.
 
 ## Layout
 

@@ -13,6 +13,7 @@ cp web/lib/swisseph.patched.js dist/lib/src/swisseph.js
 cp node_modules/swisseph-wasm/wasm/swisseph.js node_modules/swisseph-wasm/wasm/swisseph.wasm dist/lib/wasm/
 cp node_modules/swisseph-wasm/wasm/swisseph.data dist/lib/wasm/swisseph-data.wasm
 cp data/sabian_degree_map.json data/cities.json content/soul_blocks.json dist/data/
+cp node_modules/jspdf/dist/jspdf.umd.min.js dist/lib/
 
 # Test pages only: stand-ins for the theme's fonts. On Shopify the section inherits the theme fonts.
 FONTS='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;600&display=swap"><style>.gc{font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.6}.gc h1,.gc h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400}</style>'
@@ -22,8 +23,8 @@ python3 - "$FONTS" "$PLACEHOLDER" <<'PY'
 import sys, pathlib
 fonts, placeholder = sys.argv[1], sys.argv[2]
 m = pathlib.Path("web/markup.html").read_text(encoding="utf-8")
-m = m.replace("<!--GC_VARS-->", "")
-test = m.replace("<!--GC_WAITLIST-->", placeholder).replace("<!--GC_SOURCE-->", "Calculator code licensed AGPL-3.0.")
+m = m.replace("<!--GC_VARS-->", "").replace("<!--GC_DATA-->", "")
+test = m.replace("<!--GC_SOURCE-->", "Calculator code licensed AGPL-3.0.")
 script = '<script type="module" src="calc.js"></script>'
 # local test site
 rm = pathlib.Path("web-dist"); import shutil
@@ -34,9 +35,8 @@ pathlib.Path("web/calculator.html").write_text('<title>Gamla Sabian Calculator</
 # Shopify section
 live = pathlib.Path("web/markup.html").read_text(encoding="utf-8").replace("<!--GC_VARS-->",
     ' style="--gc-bg: {{ section.settings.color_bg }}; --gc-text: {{ section.settings.color_text }}; --gc-band: {{ section.settings.color_band }}; --gc-band-text: {{ section.settings.color_band_text }}; --gc-button: {{ section.settings.color_button }};"')
-live = live.replace("<!--GC_WAITLIST-->", """{%- if section.settings.klaviyo_form_id != blank -%}
-    <div class="klaviyo-form-{{ section.settings.klaviyo_form_id }}"></div>
-    {%- endif -%}""").replace("<!--GC_SOURCE-->", """{%- if section.settings.source_url != blank -%}<a href="{{ section.settings.source_url }}" target="_blank" rel="noopener">Calculator source code</a> licensed AGPL-3.0.{%- endif -%}""")
+live = live.replace("<!--GC_DATA-->",
+    ' data-klaviyo-key="{{ section.settings.klaviyo_public_key | escape }}" data-klaviyo-list="{{ section.settings.klaviyo_list_id | escape }}" data-privacy-url="{{ section.settings.privacy_url }}" data-page-url="{{ shop.url }}{{ page.url }}"').replace("<!--GC_SOURCE-->", """{%- if section.settings.source_url != blank -%}<a href="{{ section.settings.source_url }}" target="_blank" rel="noopener">Calculator source code</a> licensed AGPL-3.0.{%- endif -%}""")
 schema = """
 <script type="application/ld+json">
 {
@@ -61,8 +61,12 @@ schema = """
   "settings": [
     { "type": "text", "id": "cdn_base", "label": "Calculator files URL",
       "info": "jsDelivr URL of the dist folder, e.g. https://cdn.jsdelivr.net/gh/USERNAME/gamla-sabian-calculator@v1.0.0/dist (no trailing slash)" },
-    { "type": "text", "id": "klaviyo_form_id", "label": "Klaviyo embedded form ID",
-      "info": "The 6-character ID of the waitlist form (Klaviyo > Sign-up forms > embed code)." },
+    { "type": "text", "id": "klaviyo_public_key", "label": "Klaviyo public API key",
+      "info": "The 6-character public key / Site ID (Klaviyo > Settings > API keys). Never the private key." },
+    { "type": "text", "id": "klaviyo_list_id", "label": "Klaviyo list ID",
+      "info": "ID of the newsletter list that receives calculator sign-ups (Klaviyo > Lists > the list > Settings)." },
+    { "type": "url", "id": "privacy_url", "label": "Privacy policy link",
+      "info": "Shown next to the consent checkbox." },
     { "type": "url", "id": "source_url", "label": "Source code link (AGPL)",
       "info": "Link to the public GitHub repository." },
     { "type": "header", "content": "Colours (defaults match gamlahealing.com)" },

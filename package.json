@@ -9,6 +9,7 @@
     "build-data": "python3 reference/build_degree_json.py"
   },
   "dependencies": {
+    "jspdf": "^4.2.1",
     "swisseph-wasm": "0.1.0"
   }
 }

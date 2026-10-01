@@ -110,6 +110,22 @@
 .gc .gc-more-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
 .gc .gc-more-list li { margin: 0; padding: .4rem .9rem; border-radius: 999px; background: var(--gc-panel); border: 1px solid var(--gc-line); font-size: .92rem; }
 .gc .gc-more-list small { opacity: .75; }
+.gc .gc-unlock { display: grid; gap: 1rem; justify-items: center; text-align: center; background: var(--gc-band); color: var(--gc-band-text); border-radius: 16px; padding: 2rem 1.5rem; margin-top: .5rem; }
+.gc .gc-unlock a { color: var(--gc-band-text); }
+.gc .gc-unlock-title { font-size: 1.45rem; font-weight: 600; max-width: none; }
+.gc .gc-unlock form { background: none; border: 0; padding: 0; width: 100%; max-width: 32rem; display: grid; gap: .8rem; }
+.gc .gc-unlock-row { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+.gc .gc-unlock-row input[type="email"] { flex: 1 1 14rem; font: inherit; color: var(--gc-text); background: var(--gc-bg); border: 0; border-radius: 10px; padding: 0 .9rem; height: 2.9rem; min-width: 0; margin: 0; }
+.gc .gc-unlock .gc-primary { background: var(--gc-bg); color: var(--gc-band); font-weight: 600; }
+.gc .gc-consent { display: flex; gap: .6rem; align-items: flex-start; text-align: left; font-size: .85rem; line-height: 1.5; }
+.gc .gc-consent input { margin: .2rem 0 0; width: auto; flex: none; accent-color: var(--gc-bg); }
+.gc .gc-consent label { display: block; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: inherit; color: inherit; }
+.gc .gc-unlock-msg { font-size: .95rem; max-width: 34rem; }
+.gc .gc-unlock-msg code { word-break: break-all; font-size: .8rem; }
+.gc .gc-mine { display: grid; gap: .8rem; justify-items: center; text-align: center; }
+.gc .gc-mine-title { font-size: 1.45rem; font-weight: 600; max-width: none; }
+.gc .gc-locked { font-style: italic; opacity: .8; }
+.gc .gc-soul-list .gc-locked { font-size: .95rem; }
 .gc .gc-section { display: grid; gap: 1rem; justify-items: center; text-align: center; }
 .gc .gc-soul-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.6rem; text-align: left; max-width: 44rem; }
 .gc .gc-soul-list li { display: grid; gap: .35rem; margin: 0; }
@@ -119,12 +135,12 @@
 .gc footer p { max-width: none; }
 </style>
 
-<div class="gc" style="--gc-bg: {{ section.settings.color_bg }}; --gc-text: {{ section.settings.color_text }}; --gc-band: {{ section.settings.color_band }}; --gc-band-text: {{ section.settings.color_band_text }}; --gc-button: {{ section.settings.color_button }};">
+<div class="gc" style="--gc-bg: {{ section.settings.color_bg }}; --gc-text: {{ section.settings.color_text }}; --gc-band: {{ section.settings.color_band }}; --gc-band-text: {{ section.settings.color_band_text }}; --gc-button: {{ section.settings.color_button }};" data-klaviyo-key="{{ section.settings.klaviyo_public_key | escape }}" data-klaviyo-list="{{ section.settings.klaviyo_list_id | escape }}" data-privacy-url="{{ section.settings.privacy_url }}" data-page-url="{{ shop.url }}{{ page.url }}">
 <div class="gc-band gc-light"><div class="gc-wrap">
   <header>
     <span class="gc-eyebrow">Gamla Healing · Sabian Symbols</span>
-    <h1>Find the Sabian symbol of every point in your chart</h1>
-    <p>Enter your birth details to see the Sabian symbol for your Sun, Moon, Ascendant, Midheaven, every planet and both lunar nodes, each linked to its full article. The calculation runs in your own browser, so the details you type here are not sent anywhere.</p>
+    <h1>Find the Sabian symbols of your birth chart</h1>
+    <p>Enter your birth details to see the Sabian symbols of your Sun, Moon and Ascendant straight away, each linked to its full article. Your complete chart (the Midheaven, every planet, both lunar nodes and your soul direction) comes as a personal PDF by email. The calculation runs in your own browser, and your details are only sent if you ask for your full chart.</p>
   </header>
 
   <form id="gc-chart-form" novalidate>
@@ -173,14 +189,7 @@
   </section></div></div>
 
 <div class="gc-band gc-light"><div class="gc-wrap">
-  <section class="gc-section" id="gc-dossier">
-    <span class="gc-eyebrow">Your full dossier</span>
-    <h2>Go deeper than the symbol names</h2>
-    <p>The personal Sabian dossier is in preparation: every point in your chart, including Chiron, Lilith, the Part of Fortune and the asteroids, with Sylvain's writing on each degree bound into one document. Join the waitlist to hear first when it opens.</p>
-    {%- if section.settings.klaviyo_form_id != blank -%}
-    <div class="klaviyo-form-{{ section.settings.klaviyo_form_id }}"></div>
-    {%- endif -%}
-  </section>
+  <div id="gc-after"></div>
 
   <footer>
     <p>Positions from the Swiss Ephemeris (Astrodienst). Tropical zodiac, Placidus houses, mean lunar nodes. Sabian degrees use the Rudhyar and Wheeler round-up convention: 20°02′ falls in the 21st degree.</p>
@@ -218,8 +227,12 @@
   "settings": [
     { "type": "text", "id": "cdn_base", "label": "Calculator files URL",
       "info": "jsDelivr URL of the dist folder, e.g. https://cdn.jsdelivr.net/gh/USERNAME/gamla-sabian-calculator@v1.0.0/dist (no trailing slash)" },
-    { "type": "text", "id": "klaviyo_form_id", "label": "Klaviyo embedded form ID",
-      "info": "The 6-character ID of the waitlist form (Klaviyo > Sign-up forms > embed code)." },
+    { "type": "text", "id": "klaviyo_public_key", "label": "Klaviyo public API key",
+      "info": "The 6-character public key / Site ID (Klaviyo > Settings > API keys). Never the private key." },
+    { "type": "text", "id": "klaviyo_list_id", "label": "Klaviyo list ID",
+      "info": "ID of the newsletter list that receives calculator sign-ups (Klaviyo > Lists > the list > Settings)." },
+    { "type": "url", "id": "privacy_url", "label": "Privacy policy link",
+      "info": "Shown next to the consent checkbox." },
     { "type": "url", "id": "source_url", "label": "Source code link (AGPL)",
       "info": "Link to the public GitHub repository." },
     { "type": "header", "content": "Colours (defaults match gamlahealing.com)" },

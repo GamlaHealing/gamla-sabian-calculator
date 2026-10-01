@@ -24,6 +24,47 @@ let showingExample = true;
 let place = { lat: 33.058, lon: -89.5896, tz: "America/Chicago", label: "Kosciusko, MS, United States" };
 let manualMode = false;
 
+// ---------- configuration from the Shopify section (data-* attributes on .gc)
+const root = document.querySelector(".gc");
+const cfg = {
+  klaviyoKey: (root && root.dataset.klaviyoKey) || "",
+  klaviyoList: (root && root.dataset.klaviyoList) || "",
+  privacyUrl: (root && root.dataset.privacyUrl) || "",
+  pageUrl: (root && root.dataset.pageUrl) || (location.origin + location.pathname),
+};
+
+// ---------- personal chart links
+// The emailed link carries the birth details in the URL fragment (#chart=...).
+// Browsers never send the fragment to the server, so Shopify and its analytics
+// never see it. The page reads it and shows the full chart.
+const b64url = {
+  enc: str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+  dec: str => new TextDecoder().decode(Uint8Array.from(atob(str.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0))),
+};
+function chartLink(inp) {
+  const payload = { v: 1, d: inp.date, t: inp.time, la: inp.lat, lo: inp.lon, tz: inp.tz, p: inp.label || "" };
+  return `${cfg.pageUrl}#chart=${b64url.enc(JSON.stringify(payload))}`;
+}
+function chartFromHash() {
+  const m = location.hash.match(/chart=([A-Za-z0-9_-]+)/);
+  if (!m) return null;
+  try {
+    const c = JSON.parse(b64url.dec(m[1]));
+    if (c.v !== 1 || !/^\d{4}-\d\d-\d\d$/.test(c.d) || typeof c.la !== "number" || typeof c.lo !== "number" || !c.tz) return null;
+    return c;
+  } catch { return null; }
+}
+let fullMode = false;
+const linked = chartFromHash();
+if (linked) {
+  fullMode = true; showingExample = false;
+  $("birth-date").value = linked.d;
+  if (linked.t) $("birth-time").value = linked.t; else { $("no-time").checked = true; $("birth-time").disabled = true; }
+  place = { lat: linked.la, lon: linked.lo, tz: linked.tz, label: linked.p || `${linked.la}, ${linked.lo}` };
+  $("place").value = place.label;
+  $("lat").value = linked.la; $("lon").value = linked.lo;
+}
+
 // ---------- boot: ephemeris, degree map and city list load in parallel
 const boot = Promise.all([
   (async () => { const s = new SwissEph(); await s.initSwissEph(); swe = s; })(),
@@ -110,8 +151,8 @@ $("no-time").addEventListener("change", e => { $("birth-time").disabled = e.targ
 // ---------- calculate
 form.addEventListener("submit", e => { e.preventDefault(); run(); });
 // The example label disappears as soon as the visitor changes anything.
-form.addEventListener("input", () => { showingExample = false; });
-form.addEventListener("change", () => { showingExample = false; });
+form.addEventListener("input", () => { showingExample = false; fullMode = false; });
+form.addEventListener("change", () => { showingExample = false; fullMode = false; });
 
 function readInput() {
   const date = $("birth-date").value;
@@ -129,8 +170,11 @@ function readInput() {
   }
   const y = +date.slice(0, 4);
   if (y < 1800 || y > 2399) throw new Error("The ephemeris covers births from 1800 to 2399.");
-  return { date, time, lat, lon, tz };
+  const label = manualMode ? `${lat}, ${lon}` : place.label;
+  return { date, time, lat, lon, tz, label };
 }
+
+let last = null;   // most recent { chart, inp }, used by the email form and the PDF
 
 function run() {
   if (!swe) return;
@@ -142,6 +186,7 @@ function run() {
   }
   status.textContent = "";
   const chart = computeChart(swe, degreeMap, inp);
+  last = { chart, inp };
   renderResults(chart, inp);
 }
 
@@ -160,11 +205,40 @@ function shiftClock(hhmm, minutes) {
   const t = ((h * 60 + m + minutes) % 1440 + 1440) % 1440;
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
-function sabianLabel(lon) {
+function sabianLabel(lon, html = true) {
   const signs = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
   const sign = signs[Math.floor(lon / 30)], deg = Math.min(Math.floor(lon % 30) + 1, 30);
   const row = degreeMap[`${sign} ${deg}`];
-  return `${sign} ${deg}°${row ? ` (${escapeHtml(row.symbol)})` : ""}`;
+  return `${sign} ${deg}°${row ? ` (${html ? escapeHtml(row.symbol) : row.symbol})` : ""}`;
+}
+
+const BIG_THREE = new Set(["Sun", "Moon", "Ascendant"]);
+const ORD = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
+const signOf = p => p.position.split(" ")[1];
+
+// The four soul-direction blocks for a chart: [label, text|null].
+// Each block is looked up by exact key in soul_blocks.json. Nothing is generated.
+function soulBlocksFor(pts, known) {
+  const pluto = pts.find(p => p.point === "Pluto"), nn = pts.find(p => p.point === "North Node");
+  const keys = [
+    [`Pluto in ${signOf(pluto)}`, "pluto_sign", signOf(pluto)],
+    known && pluto.house ? [`Pluto in the ${ORD(pluto.house)} house`, "pluto_house", String(pluto.house)] : null,
+    [`North Node in ${signOf(nn)}`, "node_sign", signOf(nn)],
+    known && nn.house ? [`North Node in the ${ORD(nn.house)} house`, "node_house", String(nn.house)] : null,
+  ].filter(Boolean);
+  return keys.map(([label, group, key]) => {
+    const b = soulBlocks && soulBlocks[group] && soulBlocks[group][key];
+    return [label, b && b.status === "approved" ? b.text : null];
+  }).filter(([, text]) => text);
+}
+
+function ascendantNote(m, inp, pts) {
+  const asc = pts.find(p => p.point === "Ascendant");
+  const w = ascendantWindow(m.julian_day_ut, inp.lat, inp.lon, asc.longitude);
+  const from = shiftClock(inp.time, w.early), to = shiftClock(inp.time, w.late);
+  const span = from === to ? `only for a birth at ${from}` : `for births from ${from} to ${to}`;
+  return { html: `<strong>Your Ascendant depends on your exact birth time.</strong> It moves about one degree every four minutes. For this date and place, ${asc.sabian} is your Ascendant ${span}. At ${shiftClock(inp.time, w.early - 1)} it would be ${sabianLabel(w.before)}, and at ${shiftClock(inp.time, w.late + 1)} it would be ${sabianLabel(w.after)}. Use the time on your birth certificate rather than a remembered one.`,
+    text: `Your Ascendant depends on your exact birth time. It moves about one degree every four minutes. For this date and place, ${asc.sabian} is your Ascendant ${span}. At ${shiftClock(inp.time, w.early - 1)} it would be ${sabianLabel(w.before, false)}, and at ${shiftClock(inp.time, w.late + 1)} it would be ${sabianLabel(w.after, false)}. Use the time on your birth certificate rather than a remembered one.` };
 }
 
 function renderResults(chart, inp) {
@@ -172,14 +246,7 @@ function renderResults(chart, inp) {
   const pts = chart.points.filter(p => p.tier === "free");
   const firstBy = {};
   const notes = [];
-
-  if (known) {
-    const asc = pts.find(p => p.point === "Ascendant");
-    const w = ascendantWindow(m.julian_day_ut, inp.lat, inp.lon, asc.longitude);
-    const from = shiftClock(inp.time, w.early), to = shiftClock(inp.time, w.late);
-    const span = from === to ? `only for a birth at ${from}` : `for births from ${from} to ${to}`;
-    notes.push(`<strong>Your Ascendant depends on your exact birth time.</strong> It moves about one degree every four minutes. For this date and place, ${asc.sabian} is your Ascendant ${span}. At ${shiftClock(inp.time, w.early - 1)} it would be ${sabianLabel(w.before)}, and at ${shiftClock(inp.time, w.late + 1)} it would be ${sabianLabel(w.after)}. Use the time on your birth certificate rather than a remembered one.`);
-  }
+  if (known) notes.push(ascendantNote(m, inp, pts).html);
   for (const w of m.warnings) {
     if (/unavailable/.test(w)) continue;           // dossier-only bodies
     notes.push(escapeHtml(w).replace(/ deg ([NS])/, "° $1").replace(/^([^.:]+[.:])/, "<strong>$1</strong>"));
@@ -188,7 +255,10 @@ function renderResults(chart, inp) {
   const rows = pts.map(p => {
     const dupOf = firstBy[p.sabian]; if (!dupOf) firstBy[p.sabian] = p.point;
     const uncertain = !known && p.point === "Moon";
-    return `<tr class="${uncertain ? "gc-uncertain" : ""}">
+    if (!fullMode && !BIG_THREE.has(p.point)) {
+      return `<tr class="gc-lock"><td class="gc-pt">${p.point}</td><td class="gc-sab" colspan="4"><span class="gc-locked">Included in your full chart, sent by email</span></td></tr>`;
+    }
+    return `<tr>
       <td class="gc-pt">${p.point}</td>
       <td class="gc-num gc-pos">${p.position}</td>
       <td class="gc-num gc-hs">${p.house ? `House ${p.house}` : ""}</td>
@@ -198,7 +268,17 @@ function renderResults(chart, inp) {
   }).join("");
 
   const offset = m.utc_offset.replace(/^([+-]\d\d)(\d\d)(\d\d)?$/, (_, h, mi, s) => `UTC${h}:${mi}${s ? ":" + s : ""}`);
+  const mine = fullMode ? `
+    <div class="gc-mine">
+      <span class="gc-eyebrow">Your personal Sabian chart</span>
+      <p class="gc-mine-title">${escapeHtml(inp.label || "")}</p>
+      <button type="button" class="gc-primary" id="gc-pdf">Download as PDF</button>
+      <p class="gc-hint">Bookmark this page to come back to your chart at any time.</p>
+    </div>` : "";
+  const unlock = fullMode ? "" : unlockCard(showingExample);
+
   $("results").innerHTML = `
+    ${mine}
     ${showingExample ? `<p class="gc-example">${escapeHtml(EXAMPLE.label)} Enter your own details above to see yours.</p>` : ""}
     <div class="gc-meta">
       <span>${known ? `${escapeHtml(inp.time)} local = ${m.universal_time}` : "Birth time unknown, calculated for local noon"}</span>
@@ -210,40 +290,228 @@ function renderResults(chart, inp) {
       <thead><tr><th>Point</th><th>Position</th><th>House</th><th>Sabian symbol</th><th>Article</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <aside class="gc-more">
-      <span class="gc-eyebrow">In the personal dossier</span>
-      <p class="gc-more-title">Your chart has more to say</p>
-      <p>The free calculator covers the planets, the angles and the lunar nodes. The personal Sabian dossier adds the rest of your chart, each with its Sabian symbol, its house and Sylvain's writing on that degree:</p>
-      <ul class="gc-more-list">
-        <li>Chiron</li><li>Black Moon Lilith</li><li>Part of Fortune${known ? "" : " <small>(needs a birth time)</small>"}</li>
-        <li>Ceres</li><li>Pallas</li><li>Juno</li><li>Vesta</li>
-      </ul>
-      <p>The dossier is in preparation. Join the waitlist to hear first when it opens.</p>
-      <button type="button" class="gc-primary gc-to-waitlist">Join the waitlist</button>
-    </aside>`;
+    ${unlock}`;
   $("results").hidden = false;
-  const toWaitlist = $("results").querySelector(".gc-to-waitlist");
-  if (toWaitlist) toWaitlist.addEventListener("click", () => $("dossier").scrollIntoView({ behavior: "smooth", block: "start" }));
+  wireUnlock();
+  const pdfBtn = $("pdf");
+  if (pdfBtn) pdfBtn.addEventListener("click", () => downloadPdf(pdfBtn));
 
-  // Soul direction preview: which of the pre-written blocks this chart would use.
-  const pluto = pts.find(p => p.point === "Pluto"), nn = pts.find(p => p.point === "North Node");
-  const sign = p => p.position.split(" ")[1];
-  const ord = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
-  // Each block is looked up by exact key in content/soul_blocks.json. Nothing is generated.
-  const blocks = [
-    [`Pluto in ${sign(pluto)}`, "pluto_sign", sign(pluto)],
-    known && pluto.house ? [`Pluto in the ${ord(pluto.house)} house`, "pluto_house", String(pluto.house)] : null,
-    [`North Node in ${sign(nn)}`, "node_sign", sign(nn)],
-    known && nn.house ? [`North Node in the ${ord(nn.house)} house`, "node_house", String(nn.house)] : null,
-  ].filter(Boolean);
-  // Only approved blocks are ever shown. A missing or unapproved block is simply left out.
-  const items = blocks.map(([label, group, key]) => {
-    const b = soulBlocks && soulBlocks[group] && soulBlocks[group][key];
-    return b && b.status === "approved"
-      ? `<li><span class="gc-tag">${label}</span><p class="gc-soul-text">${escapeHtml(b.text)}</p></li>` : "";
-  }).join("");
-  $("soul-list").innerHTML = items;
-  $("soul").hidden = !items;
+  // Soul direction: full text in full mode, labels only in preview.
+  const blocks = soulBlocksFor(pts, known);
+  $("soul-list").innerHTML = blocks.map(([label, text]) => fullMode
+    ? `<li><span class="gc-tag">${label}</span><p class="gc-soul-text">${escapeHtml(text)}</p></li>`
+    : `<li><span class="gc-tag">${label}</span><span class="gc-locked">Included in your full chart, sent by email</span></li>`).join("");
+  $("soul").hidden = !blocks.length;
+
+  // After the soul band: the paid-dossier teaser, only on a personal chart.
+  $("after").innerHTML = fullMode ? `
+    <aside class="gc-more">
+      <span class="gc-eyebrow">Coming next</span>
+      <p class="gc-more-title">Your chart has more to say</p>
+      <p>Your chart also holds these points, each with its own Sabian symbol. They will be part of the personal Sabian dossier, with Sylvain's writing on every degree. As a subscriber, you will hear first when it opens.</p>
+      <ul class="gc-more-list"><li>Chiron</li><li>Black Moon Lilith</li><li>Part of Fortune${known ? "" : " <small>(needs a birth time)</small>"}</li><li>Ceres</li><li>Pallas</li><li>Juno</li><li>Vesta</li></ul>
+    </aside>` : "";
 }
+
+// ---------- email form: subscribe to the newsletter, receive the full chart by email
+function unlockCard(example) {
+  const privacy = cfg.privacyUrl ? ` <a href="${escapeHtml(cfg.privacyUrl)}" target="_blank" rel="noopener">Privacy policy</a>.` : "";
+  return `
+    <section class="gc-unlock" aria-labelledby="gc-unlock-title">
+      <span class="gc-eyebrow">Your full Sabian chart</span>
+      <p class="gc-unlock-title" id="gc-unlock-title">Get every placement in a personal PDF</p>
+      <p>We will email you a link to your complete chart: the Midheaven, every planet from Mercury to Pluto, both lunar nodes and your four soul-direction paragraphs, each with its Sabian symbol and a link to the full article. Open it, read it, and download it as a PDF.</p>
+      ${example ? `<p class="gc-unlock-msg"><strong>Enter your own birth details above first.</strong> This is still the example chart.</p>` : `
+      <form id="gc-unlock-form" novalidate>
+        <div class="gc-unlock-row">
+          <input type="email" id="gc-email" required autocomplete="email" placeholder="Your email address" aria-label="Your email address">
+          <button type="submit" class="gc-primary" id="gc-unlock-go">Send me my chart</button>
+        </div>
+        <div class="gc-consent">
+          <input type="checkbox" id="gc-consent" required>
+          <label for="gc-consent">Subscribe me to the Gamla Healing newsletter and send me my Sabian chart. To do this, Gamla Healing stores my email address, birth details and Sabian placements with its email provider, Klaviyo. I can unsubscribe at any time, and my data is deleted on request.${privacy}</label>
+        </div>
+      </form>`}
+      <div class="gc-unlock-msg" id="gc-unlock-msg" role="status"></div>
+    </section>`;
+}
+
+function wireUnlock() {
+  const f = $("unlock-form");
+  if (!f) return;
+  f.addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = $("unlock-msg"), btn = $("unlock-go");
+    const email = $("email").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Enter a valid email address."; return; }
+    if (!$("consent").checked) { msg.textContent = "Tick the box to confirm you want the newsletter and your chart."; return; }
+    if (!last) return;
+    const link = chartLink(last.inp);
+    const pts = last.chart.points.filter(p => p.tier === "free");
+    const bySabian = name => { const p = pts.find(x => x.point === name); return p ? `${p.sabian} ${p.symbol || ""}`.trim() : ""; };
+    const properties = {
+      sabian_chart_link: link,
+      sabian_birth_date: last.inp.date,
+      sabian_birth_time: last.inp.time || "unknown",
+      sabian_birth_place: last.inp.label || "",
+      sabian_sun: bySabian("Sun"),
+      sabian_moon: bySabian("Moon"),
+      sabian_ascendant: bySabian("Ascendant"),
+      sabian_placements: pts.map(p => `${p.point}: ${p.sabian} ${p.symbol || ""}`.trim()),
+      sabian_signup_date: new Date().toISOString().slice(0, 10),
+    };
+    if (!cfg.klaviyoKey || !cfg.klaviyoList) {
+      // Test page: Klaviyo is not connected, so show what would be sent.
+      msg.innerHTML = `<strong>Test mode: Klaviyo is not connected.</strong> On the live site this email would now receive a confirmation request, then a link to the full chart. The link would be:<br><a href="${escapeHtml(link)}">${escapeHtml(link)}</a>`;
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      await klaviyoSubscribe(email, properties);
+      f.hidden = true;
+      msg.innerHTML = `<strong>Almost there.</strong> Check your inbox and confirm your email address. Your chart arrives right after. If nothing comes within a few minutes, look in your spam folder.`;
+    } catch (err) {
+      btn.disabled = false; btn.textContent = "Send me my chart";
+      msg.textContent = "Something went wrong while sending. Try again in a moment.";
+    }
+  });
+}
+
+// Klaviyo client-side API (public key only, designed for browsers).
+// 1. subscribe the email to the list (the list's own double opt-in applies)
+// 2. save the chart details as custom profile properties, which the Klaviyo email uses
+async function klaviyoSubscribe(email, properties) {
+  const url = path => `https://a.klaviyo.com/client/${path}/?company_id=${encodeURIComponent(cfg.klaviyoKey)}`;
+  const headers = { "Content-Type": "application/json", "revision": "2026-07-15" };
+  const sub = await fetch(url("subscriptions"), { method: "POST", headers, body: JSON.stringify({
+    data: { type: "subscription",
+      attributes: { custom_source: "Sabian calculator",
+        profile: { data: { type: "profile", attributes: { email, properties } } } },
+      relationships: { list: { data: { type: "list", id: cfg.klaviyoList } } } } }) });
+  if (!sub.ok) throw new Error(`subscription ${sub.status}`);
+  const prof = await fetch(url("profiles"), { method: "POST", headers, body: JSON.stringify({
+    data: { type: "profile", attributes: { email, properties } } }) });
+  if (!prof.ok) throw new Error(`profile ${prof.status}`);
+  // 3. an event, so returning subscribers who ask for another chart also get an email
+  //    (Klaviyo flow "Requested Sabian Chart"). Not fatal if it fails.
+  await fetch(url("events"), { method: "POST", headers, body: JSON.stringify({
+    data: { type: "event", attributes: {
+      properties: { sabian_chart_link: properties.sabian_chart_link, sabian_birth_place: properties.sabian_birth_place,
+                    sabian_sun: properties.sabian_sun, sabian_moon: properties.sabian_moon, sabian_ascendant: properties.sabian_ascendant },
+      metric: { data: { type: "metric", attributes: { name: "Requested Sabian Chart" } } },
+      profile: { data: { type: "profile", attributes: { email } } } } } }) }).catch(() => {});
+}
+
+// ---------- PDF, made in the visitor's browser with jsPDF (no server)
+function loadScript(src) {
+  return new Promise((ok, fail) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); });
+}
+// The PDF uses the built-in Helvetica, which covers Latin-1 only. Fold anything else.
+const pdfSafe = s => String(s).replace(/[^\x20-\x7E\xA0-\xFF]/g, c => EXTRA[c] || EXTRA[c.toLowerCase()] || c.normalize("NFD").replace(/[^\x20-\x7E\xA0-\xFF]/g, ""));
+
+async function downloadPdf(btn) {
+  if (!last) return;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "Preparing PDF…";
+  try {
+    if (!window.jspdf) await loadScript(asset("./lib/jspdf.umd.min.js"));
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const { chart, inp } = last, m = chart.meta, known = m.birth_time_known;
+    const pts = chart.points.filter(p => p.tier === "free");
+    const css = getComputedStyle(root);
+    const hex = v => { const h = (css.getPropertyValue(v).trim() || "#000000").replace("#", ""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+    const BAND = hex("--gc-band"), TEXT = hex("--gc-text"), PANEL = [246, 244, 251], MUTED = [119, 115, 138];
+    const W = 210, M = 16, CW = W - 2 * M;
+    let y = 0;
+    const page = () => { doc.addPage(); y = M; };
+    const need = h => { if (y + h > 297 - 18) page(); };
+    const para = (t, size = 10, color = TEXT, style = "normal", width = CW, x = M, lh = 1.45) => {
+      doc.setFont("helvetica", style); doc.setFontSize(size); doc.setTextColor(...color);
+      const lines = doc.splitTextToSize(pdfSafe(t), width);
+      const h = lines.length * size * 0.3528 * lh;
+      need(h); doc.text(lines, x, y + size * 0.3528, { lineHeightFactor: lh }); y += h; return h;
+    };
+
+    // header band
+    doc.setFillColor(...BAND); doc.rect(0, 0, W, 38, "F");
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+    doc.text("GAMLA HEALING  ·  SABIAN SYMBOLS", M, 13);
+    doc.setFont("times", "normal"); doc.setFontSize(24); doc.text("Your Sabian Chart", M, 25);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
+    doc.text(pdfSafe(`${inp.label || ""}   ${inp.date}${known ? "   " + inp.time : "   birth time unknown"}`), M, 32.5);
+    y = 48;
+
+    para(`${known ? `${inp.time} local = ${m.universal_time}` : "Birth time unknown, calculated for local noon."}   ${inp.tz}   ${m.house_system ? m.house_system + " houses" : ""}`, 8.5, MUTED);
+    y += 4;
+    if (known) {
+      const t = ascendantNote(m, inp, pts).text;
+      doc.setFontSize(9); const lines = doc.splitTextToSize(pdfSafe(t), CW - 10); const h = lines.length * 9 * 0.3528 * 1.45 + 8;
+      need(h); doc.setFillColor(...PANEL); doc.rect(M, y, CW, h, "F"); doc.setFillColor(...BAND); doc.rect(M, y, 1.4, h, "F");
+      doc.setTextColor(...TEXT); doc.setFont("helvetica", "normal"); doc.text(lines, M + 6, y + 4 + 9 * 0.3528, { lineHeightFactor: 1.45 }); y += h + 6;
+    }
+    for (const w of m.warnings) if (!/unavailable/.test(w)) { para(w.replace(/ deg ([NS])/, " ° $1").replace(" ° ", "° "), 9, MUTED); y += 3; }
+
+    // placements
+    doc.setFont("times", "normal"); doc.setFontSize(16); doc.setTextColor(...TEXT); need(12); doc.text("Your placements", M, y + 6); y += 12;
+    pts.forEach((p, i) => {
+      const dark = i % 2 === 1;
+      doc.setFontSize(9.5);
+      const symLines = doc.splitTextToSize(pdfSafe(`${p.sabian}  ${p.symbol || ""}`), 92);
+      const h = 7 + symLines.length * 4.6 + 4.2 + (p.article_title ? 4.6 : 0);
+      need(h + 2);
+      if (dark) { doc.setFillColor(...BAND); } else { doc.setFillColor(...PANEL); }
+      doc.roundedRect(M, y, CW, h, 2.5, 2.5, "F");
+      if (!dark) { doc.setFillColor(...BAND); doc.rect(M, y, 1.4, h, "F"); }
+      const fg = dark ? [255, 255, 255] : TEXT, sub = dark ? [235, 233, 248] : MUTED;
+      doc.setTextColor(...fg); doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.text(pdfSafe(p.point), M + 5, y + 7);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...sub);
+      doc.text(pdfSafe(p.position + (p.house ? `   House ${p.house}` : "")), M + 5, y + 12);
+      doc.setTextColor(...fg); doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+      doc.text(symLines, M + 78, y + 7, { lineHeightFactor: 1.35 });
+      let yy = y + 7 + symLines.length * 4.6 - 0.6;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...sub);
+      doc.text(pdfSafe(p.keyword || ""), M + 78, yy); yy += 4.6;
+      if (p.article_url) {
+        doc.setTextColor(...(dark ? [255, 255, 255] : BAND));
+        const t = pdfSafe("Read: " + p.article_title);
+        doc.textWithLink(t.length > 70 ? t.slice(0, 68) + "..." : t, M + 78, yy, { url: p.article_url });
+      }
+      y += h + 2;
+    });
+
+    // soul direction
+    const blocks = soulBlocksFor(pts, known);
+    if (blocks.length) {
+      page();
+      doc.setFillColor(...BAND); doc.rect(0, 0, W, 30, "F");
+      doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.text("SOUL DIRECTION", M, 12);
+      doc.setFont("times", "normal"); doc.setFontSize(20); doc.text("Where your chart points you", M, 23);
+      y = 40;
+      para("Read through the lens of evolutionary astrology: Pluto shows what your soul is working through, and the North Node shows the direction of growth.", 9.5, MUTED);
+      y += 4;
+      for (const [lbl, text] of blocks) {
+        need(20); para(lbl.toUpperCase(), 8.5, BAND, "bold"); y += 1.5; para(text, 10.5, TEXT, "normal", CW, M, 1.55); y += 6;
+      }
+    }
+
+    // coming next + footer notes
+    need(40); y += 2;
+    para("Coming next: the personal Sabian dossier", 12, TEXT, "bold"); y += 1.5;
+    para(`Your chart also holds Chiron, Black Moon Lilith, ${known ? "the Part of Fortune, " : ""}Ceres, Pallas, Juno and Vesta, each with its own Sabian symbol. They will be part of the personal Sabian dossier, with Sylvain's writing on every degree. As a subscriber, you will hear first when it opens.`, 10);
+    y += 6;
+    para("Positions from the Swiss Ephemeris (Astrodienst). Tropical zodiac, Placidus houses, mean lunar nodes. Sabian degrees use the Rudhyar and Wheeler round-up convention: 20°02' falls in the 21st degree.", 8, MUTED);
+    const n = doc.getNumberOfPages();
+    for (let i = 1; i <= n; i++) {
+      doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...MUTED);
+      doc.textWithLink("gamlahealing.com", M, 289, { url: "https://www.gamlahealing.com" });
+      doc.text(`${i} / ${n}`, W - M, 289, { align: "right" });
+    }
+    const safeName = (inp.date + "-" + (inp.label || "chart").split(",")[0]).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9-]+/g, "-");
+    doc.save(`sabian-chart-${safeName}.pdf`);
+  } catch (err) {
+    alertBox(`The PDF could not be created (${err.message || err}). Try again, or use your browser's Print menu to save this page as a PDF.`);
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+function alertBox(t) { const s = $("status"); if (s) s.innerHTML = `<span class="gc-error">${escapeHtml(t)}</span>`; }
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
