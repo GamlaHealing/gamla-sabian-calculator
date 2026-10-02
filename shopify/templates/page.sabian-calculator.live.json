@@ -3,7 +3,7 @@
     "calculator": {
       "type": "sabian-calculator",
       "settings": {
-        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.2.1/dist",
+        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.2.2/dist",
         "klaviyo_public_key": "VtnJ2n",
         "klaviyo_list_id": "SvxCvA",
         "privacy_url": "https://www.gamlahealing.com/policies/privacy-policy",

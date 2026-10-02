@@ -73,7 +73,7 @@ const boot = Promise.all([
 ]);
 const citiesReady = fetch(asset("./data/cities.json")).then(r => r.json()).then(j => {
   cities = j.c.map(([name, cc, st, lat, lon, tzi]) => ({
-    name, cc, st, lat, lon, tz: j.tz[tzi], key: fold(name),
+    name, cc, st: typeof st === "number" ? (j.r && j.r[st]) || "" : st, lat, lon, tz: j.tz[tzi], key: fold(name),
   }));
   fillZones(j.tz);
 });
@@ -143,7 +143,7 @@ $("toggle-manual").addEventListener("click", () => {
   manualMode = !manualMode;
   $("manual").hidden = !manualMode;
   $("toggle-manual").setAttribute("aria-expanded", String(manualMode));
-  $("toggle-manual").textContent = manualMode ? "Use the town list instead" : "My town is not listed: enter coordinates";
+  $("toggle-manual").textContent = manualMode ? "Use the town list instead" : "Enter coordinates instead";
   input.disabled = manualMode;
 });
 $("no-time").addEventListener("change", e => { $("birth-time").disabled = e.target.checked; });
