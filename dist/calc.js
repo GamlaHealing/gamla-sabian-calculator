@@ -317,7 +317,8 @@ function renderResults(chart, inp) {
       <span class="gc-eyebrow">Going deeper</span>
       <p class="gc-more-title">${MORE_TITLE}</p>
       <p>${escapeHtml(MORE_TEXT)}</p>
-      <ul class="gc-more-list"><li>Aspects</li><li>House rulers</li><li>Chiron</li><li>Black Moon Lilith</li><li>Part of Fortune</li><li>Asteroids</li><li>Transits</li></ul>
+      <ul class="gc-more-list"><li>Soul Mission</li><li>Aspects</li><li>House rulers</li><li>Chiron</li><li>Black Moon Lilith</li></ul>
+      <ul class="gc-more-list"><li>Part of Fortune</li><li>Asteroids</li><li>Transits</li></ul>
       <a class="gc-primary gc-more-btn" href="${SERVICES_URL}">${MORE_LINK}</a>
     </aside>` : "";
 }
@@ -329,7 +330,7 @@ function unlockCard(example) {
     <section class="gc-unlock" aria-labelledby="gc-unlock-title">
       <span class="gc-eyebrow">Your full Sabian chart</span>
       <p class="gc-unlock-title" id="gc-unlock-title">Get every placement in a personal PDF</p>
-      <p>We will email you a link to your complete chart: the Midheaven, every planet from Mercury to Pluto, both lunar nodes and your four soul-direction paragraphs, each with its Sabian symbol and a link to the full article. Open it, read it, and download it as a PDF.</p>
+      <p>We will email you a link to your complete chart: the Midheaven, every planet from Mercury to Pluto, both lunar nodes and your four soul-direction paragraphs, each with its Sabian symbol and a link to the full article.<span class="gc-oneline">Open it, read it, and download it as a PDF.</span></p>
       ${example ? `<p class="gc-unlock-msg"><strong>Enter your own birth details above first.</strong> This is still the example chart.</p>` : `
       <form id="gc-unlock-form" novalidate>
         <div class="gc-unlock-row">
