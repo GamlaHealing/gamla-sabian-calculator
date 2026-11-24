@@ -200,3 +200,10 @@
 
 /* Keep the wheel's redraws from re-laying out the rest of the page during playback. */
 .gs .gs-wheelbox { contain: layout paint; }
+
+/* Recent events (past two weeks) above a "Today" line */
+.gs .gs-ev-list { position: relative; }
+.gs .gs-ev-past button { opacity: .62; }
+.gs .gs-ev-past button:hover, .gs .gs-ev-past.on button { opacity: 1; }
+.gs .gs-ev-today { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .06em; }
+.gs .gs-ev-today::after { content: ""; flex: 1; height: 2px; background: var(--primary); opacity: .5; border-radius: 2px; }

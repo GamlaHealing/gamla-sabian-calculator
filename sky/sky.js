@@ -439,7 +439,7 @@ async function setNatal(inp, save) {
   if (!inp) { natal = natalInput = null; pEvents = []; try { localStorage.removeItem(NATAL_KEY); } catch { } renderNatalCard(); redraw(); renderEvents(); return; }
   natal = await computeNatal(inp); natalInput = inp; showNatal = true;
   if (save) { try { localStorage.setItem(NATAL_KEY, JSON.stringify(inp)); } catch { } }
-  try { pEvents = personalEvents(swe, M, nowJD(), natal, 92); } catch { pEvents = []; }
+  try { pEvents = personalEvents(swe, M, nowJD() - EV_PAST, natal, EV_PAST + 92); evToToday = true; } catch { pEvents = []; }
   renderNatalCard(); redraw(); renderEvents();
 }
 function renderNatalCard() {
@@ -568,7 +568,8 @@ function buildTodayCard() {
 }
 
 // ---------- coming up: the next three months of lunations, eclipses, sign changes and stations
-let events = [], allEvents = [], evFilter = "all", evActive = null;
+let events = [], allEvents = [], evFilter = "all", evActive = null, evToToday = true;
+const EV_PAST = 14; // days of recent events kept in the list, above a "Today" line
 const GLYPH = Object.fromEntries(BODIES.map(([n, , g]) => [n, g]));
 const EV_FILTERS = [["all", "All"], ["you", "For you"], ["moon", "Moons and eclipses"], ["ingress", "Sign changes"], ["station", "Retrogrades"]];
 const evGroup = e => e.kind === "transit" || e.kind === "house" ? "you" : e.kind === "ingress" ? "ingress" : e.kind.startsWith("station") ? "station" : "moon";
@@ -601,13 +602,15 @@ function evIcon(e) {
 }
 function renderEvents() {
   const box = $("ev-list"); if (!box || !events.length) return;
-  let html = "", month = "";
+  let html = "", month = "", todayDone = false;
+  const now = nowJD();
   const mine = natal && showNatal;
   const youBtn = document.querySelector('.gs .gs-ev-filters button[data-f="you"]'); if (youBtn) youBtn.hidden = !mine;
   if (!mine && evFilter === "you") { evFilter = "all"; document.querySelectorAll(".gs .gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.f === "all"))); }
   allEvents = (mine ? events.concat(pEvents) : events.slice()).sort((a, b) => a.jd - b.jd);
   for (const [i, e] of allEvents.entries()) {
     if (evFilter !== "all" && evGroup(e) !== evFilter) continue;
+    if (!todayDone && e.jd >= now) { todayDone = true; html += `<li class="gs-ev-today" id="gs-ev-today">Today</li>`; }
     const f = localFields(e.jd), hh = Math.floor(f.h + 1e-9), mm = Math.floor((f.h - hh) * 60 + 1e-6);
     const mkey = `${MONTHS[f.m - 1]} ${yearText(f.y)}`;
     if (mkey !== month) { month = mkey; html += `<li class="gs-ev-month">${esc(mkey)}</li>`; }
@@ -622,9 +625,12 @@ function renderEvents() {
       if (sb.row && sb.row.url) extra = `<a class="gs-ev-sab" href="${esc(sb.row.url)}" target="_blank" rel="noopener">Sabian symbol ${esc(sb.key)}°: ${esc(sb.row.symbol)}</a>`;
       if (evActive === i) extra += lunationReading(e);
     }
-    html += `<li class="gs-ev${evActive === i ? " on" : ""}"><button type="button" data-i="${i}"><span class="gs-ev-ic">${evIcon(e)}</span><span class="gs-ev-when">${f.d} ${MONTHS[f.m - 1].slice(0, 3)}<small>${two(hh)}:${two(mm)}</small></span><span class="gs-ev-what"><b>${esc(title)}</b>${detail ? `<small>${esc(detail)}</small>` : ""}</span></button>${extra}</li>`;
+    html += `<li class="gs-ev${evActive === i ? " on" : ""}${e.jd < now ? " gs-ev-past" : ""}"><button type="button" data-i="${i}"><span class="gs-ev-ic">${evIcon(e)}</span><span class="gs-ev-when">${f.d} ${MONTHS[f.m - 1].slice(0, 3)}<small>${two(hh)}:${two(mm)}</small></span><span class="gs-ev-what"><b>${esc(title)}</b>${detail ? `<small>${esc(detail)}</small>` : ""}</span></button>${extra}</li>`;
   }
-  box.innerHTML = html || `<li class="gs-ev-empty">Nothing of this kind in the next three months.</li>`;
+  if (html && !todayDone) html += `<li class="gs-ev-today" id="gs-ev-today">Today</li>`;
+  box.innerHTML = html || `<li class="gs-ev-empty">Nothing of this kind in the past two weeks or the next three months.</li>`;
+  // Open the list at "Today": recent events sit above it, one scroll away.
+  if (evToToday) { evToToday = false; const t = $("ev-today"); if (t) { const prev = t.previousElementSibling, prev2 = prev && prev.previousElementSibling; box.scrollTop = Math.max(0, (prev2 && prev2.classList.contains("gs-ev") ? prev2 : prev || t).offsetTop - 4); } }
   $("ev-zone").textContent = `Times are local to ${place.label}${usesZone(nowJD()) ? ` (${offText(offsetMs(nowJD()))})` : ""}. Click an event to see the sky at that moment${natal && showNatal ? ", or a New Moon, Full Moon or eclipse to read what it means for you" : ""}.`;
 }
 // "What this New Moon / Full Moon means for you": the house of the lunation in the visitor's birth chart.
@@ -646,14 +652,14 @@ function buildEventsCard() {
   const left = document.createElement("div"); left.className = "gs-left";
   const wb = document.querySelector(".gs .gs-wheelbox"); wb.parentNode.insertBefore(left, wb); left.appendChild(wb);
   const card = document.createElement("div"); card.className = "gs-card gs-events";
-  card.innerHTML = `<h2>Coming up in the next three months</h2>
+  card.innerHTML = `<h2>Recent and coming up</h2>
     <div class="gs-ev-filters" role="group" aria-label="Show">${EV_FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${k === evFilter}">${l}</button>`).join("")}</div>
     <ul class="gs-ev-list" id="gs-ev-list"><li class="gs-ev-empty">Finding the coming events…</li></ul>
     <p class="gs-meta" id="gs-ev-zone"></p>`;
   left.appendChild(card);
   card.querySelector(".gs-ev-filters").addEventListener("click", ev => {
     const b = ev.target.closest("button"); if (!b) return;
-    evFilter = b.dataset.f; card.querySelectorAll(".gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderEvents();
+    evFilter = b.dataset.f; evToToday = true; card.querySelectorAll(".gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderEvents();
   });
   $("ev-list").addEventListener("click", ev => {
     if (ev.target.closest(".gs-ev-addchart")) { renderNatalForm(null); const c = $("natal"); if (c) c.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
@@ -683,7 +689,7 @@ let citiesReady;
     buildNatalCard();
     await setJD(nowJD());
     { let saved = natalFromHash(), fromLink = !!saved; if (!saved) { try { saved = JSON.parse(localStorage.getItem(NATAL_KEY) || "null"); } catch { saved = null; } } if (saved && saved.d) { try { await setNatal(saved, fromLink); } catch { } } }
-    setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD(), 92); } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
+    setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD() - EV_PAST, EV_PAST + 92); evToToday = true; } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
   } catch (e) {
     $("when").textContent = `The ephemeris could not load (${e.message || e}). Reload the page to try again.`;
   }
