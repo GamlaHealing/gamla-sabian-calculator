@@ -289,6 +289,26 @@ function stop() { playing = false; $("play").textContent = "Play"; $("play").set
 $("play").addEventListener("click", () => { if (playing) return stop(); playing = true; $("play").textContent = "Pause"; $("play").setAttribute("aria-pressed", "true"); last = performance.now(); requestAnimationFrame(frame); });
 $("dir").addEventListener("click", () => { dirSign = -dirSign; $("dir").textContent = dirSign > 0 ? "Forward" : "Backward"; $("dir").setAttribute("aria-label", `Play direction: ${dirSign > 0 ? "forward" : "backward"}`); });
 $("now").addEventListener("click", () => { stop(); setJD(nowJD()); });
+// iPhone fix: while the chart plays, the wheel is redrawn many times a second. Safari on iOS then reads each tap
+// as a "hover" on changing content and swallows the click, so Pause and the other buttons seem dead.
+// During playback, a clean tap on a button is turned into the click directly.
+{
+  let tx = 0, ty = 0, tbtn = null;
+  const root = document.querySelector(".gs");
+  root.addEventListener("touchstart", e => {
+    const t = e.touches[0]; tbtn = playing && e.touches.length === 1 ? e.target.closest("button") : null;
+    if (tbtn) { tx = t.clientX; ty = t.clientY; }
+  }, { passive: true });
+  root.addEventListener("touchend", e => {
+    const b = tbtn; tbtn = null;
+    if (!b || !playing || b.disabled) return;
+    const t = e.changedTouches[0];
+    if (Math.abs(t.clientX - tx) > 10 || Math.abs(t.clientY - ty) > 10) return; // a scroll, not a tap
+    if (document.elementFromPoint(t.clientX, t.clientY)?.closest("button") !== b) return;
+    e.preventDefault(); // no second, native click
+    b.click();
+  }, { passive: false });
+}
 
 // ---------- steps
 function shift(unit, n) {

@@ -193,3 +193,7 @@
 .gs .gs-ev-read .gs-ev-note { font-size: 12.5px; color: var(--sky-soft); }
 .gs .gs-ev-read .gs-ev-addchart { min-height: 40px; font-size: 14px; padding: 0 14px; }
 @media (max-width: 600px) { .gs .gs-ev-read { margin-left: 0; } }
+
+/* Phones and tablets: the title switches between one line ("The sky right now") and two ("The sky on 24 September 2026")
+   while the chart plays. Reserve two lines so the buttons below never jump under the visitor's finger. */
+@media (max-width: 900px) { .gs .gs-sky h1#gs-title { min-height: 2.2em; display: flex; align-items: center; justify-content: center; } }
