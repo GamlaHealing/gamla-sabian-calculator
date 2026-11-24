@@ -4,11 +4,13 @@
 <div class="gs" data-default="{{ section.settings.default_mode }}">
 <section class="gs-band gs-sky" aria-labelledby="gs-title">
  <div class="gs-inner">
-  <div class="gs-top"><div>
+  <div class="gs-top">
+  <button type="button" class="gs-mode" id="gs-mode">Night sky</button>
   <h1 id="gs-title">The sky right now</h1>
+  {%- if section.settings.header_image != blank -%}{{ section.settings.header_image | image_url: width: 1280 | image_tag: class: 'gs-hero', alt: '', loading: 'eager', widths: '640, 960, 1280', sizes: '(min-width: 640px) 576px, 90vw' }}{%- endif -%}
   <p class="gs-when" id="gs-when">Loading the ephemeris…</p>
-  </div><button type="button" class="gs-mode" id="gs-mode">Night sky</button></div>
   {%- if section.settings.intro != blank -%}<p class="gs-intro">{{ section.settings.intro }}</p>{%- endif -%}
+  </div>
   <div class="gs-grid">
    <div class="gs-wheelbox">
     <svg id="gs-wheel" viewBox="0 0 600 600" role="img" aria-label="Chart wheel of the sky at the chosen moment"></svg>
@@ -16,8 +18,16 @@
    </div>
    <div class="gs-ctl">
     <div class="gs-card">
+     <h2>Seen from</h2>
+     <div class="gs-place">
+      <input id="gs-place" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="gs-sug" aria-label="Place for houses and local time" placeholder="Search a city">
+      <ul class="gs-sug" id="gs-sug" role="listbox" hidden></ul>
+     </div>
+     <p class="gs-meta" id="gs-placemeta"></p>
+    </div>
+    <div class="gs-card">
      <h2>Move through time</h2>
-     <div class="gs-row" style="margin-bottom:12px">
+     <div class="gs-row gs-play-row" style="margin-bottom:12px">
       <button type="button" class="gs-primary" id="gs-play" aria-pressed="false">Play</button>
       <select id="gs-speed" aria-label="Playback speed">
        <option value="0.0417">1 hour per second</option>
@@ -43,14 +53,6 @@
      <div class="gs-row" style="margin-top:8px"><input id="gs-time" type="time" step="60" aria-label="Local time"><span class="gs-meta" id="gs-zone" style="margin:0"></span></div>
      <input class="gs-range" id="gs-yr" type="range" min="-3999" max="2999" step="1" aria-label="Year slider">
      <div class="gs-ticks"><span>4000 BC</span><span>2000 BC</span><span>1 AD</span><span>2999 AD</span></div>
-    </div>
-    <div class="gs-card">
-     <h2>Seen from</h2>
-     <div class="gs-place">
-      <input id="gs-place" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="gs-sug" aria-label="Place for houses and local time" placeholder="Search a city">
-      <ul class="gs-sug" id="gs-sug" role="listbox" hidden></ul>
-     </div>
-     <p class="gs-meta" id="gs-placemeta"></p>
     </div>
     <div class="gs-card gs-moon" id="gs-moon"></div>
     <p class="gs-warn" id="gs-warn" hidden></p>
@@ -135,6 +137,12 @@
         }
       ],
       "info": "Visitors can switch with the Day sky / Night sky button; their choice is remembered on their device."
+    },
+    {
+      "type": "image_picker",
+      "id": "header_image",
+      "label": "Header image",
+      "info": "Shown under the title, as on the Sabian calculator page."
     },
     {
       "type": "inline_richtext",
