@@ -1,0 +1,70 @@
+{
+  "sections": {
+    "sky": {
+      "type": "sky-chart",
+      "blocks": {
+        "note_1": {
+          "type": "note",
+          "settings": {
+            "title": "Ephemeris",
+            "text": "Positions come from the Swiss Ephemeris by Astrodienst, built on NASA JPL's DE431 for 1800 to 2400 and DE441 for every other century. Each 600-year block loads only when you travel into it."
+          }
+        },
+        "note_2": {
+          "type": "note",
+          "settings": {
+            "title": "Conventions",
+            "text": "Tropical zodiac, Placidus houses (Whole Sign near the poles, where Placidus does not exist), mean Node. A planet at 20°02' sits in the 21st Sabian degree, following Rudhyar and Wheeler."
+          }
+        },
+        "note_3": {
+          "type": "note",
+          "settings": {
+            "title": "Calendar",
+            "text": "Dates before 15 October 1582 use the Julian calendar, as historians write them. There is no year 0: 1 BC is followed by 1 AD."
+          }
+        },
+        "note_4": {
+          "type": "note",
+          "settings": {
+            "title": "Clock time",
+            "text": "From 1850 the time shown is the legal time of the place's time zone. Before 1850 it is the local mean time of the place, the time a sundial-based clock would have kept there."
+          }
+        },
+        "note_5": {
+          "type": "note",
+          "settings": {
+            "title": "Ancient dates",
+            "text": "The planets stay reliable across the whole range. What becomes uncertain is the clock: the slowing of the Earth's rotation can only be estimated for the deep past, so for a precise hour long ago the Moon may fall in a neighbouring Sabian degree and the Ascendant and houses can shift by several degrees or more."
+          }
+        },
+        "note_6": {
+          "type": "note",
+          "settings": {
+            "title": "Signs and constellations",
+            "text": "The tropical zodiac is measured from the spring equinox of each year. Because of precession, in 4000 BC the signs lay over different constellations than they do today."
+          }
+        }
+      },
+      "block_order": [
+        "note_1",
+        "note_2",
+        "note_3",
+        "note_4",
+        "note_5",
+        "note_6"
+      ],
+      "settings": {
+        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.3.0/sky",
+        "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
+        "intro": "Watch the planets move in real time, or travel to any moment from 4000 BC to 2999 AD. Every placement links to its Sabian symbol and to the full article on it.",
+        "ledger_heading": "Every placement at this moment",
+        "ledger_intro": "Each planet with its exact position, its house for the place you chose, and its Sabian degree. Follow the links to read the symbol and the placement in depth.",
+        "notes_heading": "How this sky is calculated"
+      }
+    }
+  },
+  "order": [
+    "sky"
+  ]
+}

@@ -20,6 +20,9 @@ shopify/                          Theme section + page template to paste into th
 tests/run_golden.mjs              Checks src/engine.js against every golden chart
 data/                             Degree map (360 rows)
 ephe/                             Astrodienst ephemeris files, identical to the ones bundled in swisseph-wasm
+sky/                              The Sky in Motion page (live sky, 4000 BC to 2999 AD). Shares dist/lib and dist/data.
+sky/ephe/                         Astrodienst DE441 files outside 1800-2400, renamed .se1 -> .wasm, loaded per 600-year block
+sky/build.py                      sky/markup.html -> shopify/sections/sky-chart.liquid, page template, sky/index.html
 ```
 
 ## Conventions
