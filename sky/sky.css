@@ -44,10 +44,12 @@
 .gs .gs-band { padding: clamp(28px, 4vw, 56px) max(5vw, 16px); }
 .gs .gs-inner { max-width: 1240px; margin: 0 auto; }
 .gs .gs-sky { background-color: var(--sky-bg); background-image: var(--stars); color: var(--sky-ink); transition: background-color .3s, color .3s; }
-.gs .gs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.gs .gs-top { position: relative; display: grid; justify-items: center; text-align: center; padding-inline: 7.5em; }
 .gs .gs-sky h1 { font-size: clamp(30px, 4.4vw, 50px); color: var(--sky-head); }
+.gs .gs-hero { display: block; width: 100%; max-width: 36rem; height: auto; margin: 6px auto 0; }
+.gs[data-mode="night"] .gs-hero { opacity: .92; }
 .gs .gs-when { margin-top: 10px; color: var(--sky-soft); font-size: 16px; }
-.gs .gs-intro { font-size: 16px; color: var(--sky-ink); margin: 14px 0 0; max-width: 70ch; }
+.gs .gs-intro { font-size: 16px; color: var(--sky-ink); margin: 14px auto 0; max-width: 62ch; }
 .gs .gs-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 48px); align-items: start; margin-top: 26px; }
 .gs .gs-wheelbox { position: relative; aspect-ratio: 1 / 1; width: 100%; max-width: 640px; justify-self: center; }
 .gs #gs-wheel { width: 100%; height: 100%; display: block; }
@@ -66,7 +68,8 @@
 .gs button:focus-visible, .gs select:focus-visible, .gs input:focus-visible, .gs a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .gs .gs-primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); font-weight: 600; padding: 0 18px; }
 .gs .gs-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
-.gs .gs-mode { flex: none; white-space: nowrap; }
+.gs .gs-mode { position: absolute; top: 0; right: 0; white-space: nowrap; }
+.gs .gs-play-row > * { flex: 1 1 auto; }
 .gs .gs-step { display: grid; gap: 6px; }
 .gs .gs-step .u { display: grid; grid-template-columns: 5.5em 1fr 1fr; gap: 6px; align-items: center; }
 .gs .gs-step .u span { font-size: 14px; color: var(--sky-soft); }
@@ -105,10 +108,12 @@
 .gs .gs-cols h3 { font-size: 16px; font-weight: 700; color: var(--head); margin: 0 0 6px; }
 .gs .gs-cols p { font-size: 15px; }
 .gs .gs-credit { margin-top: 26px; font-size: 13px; color: var(--muted); }
-@media (max-width: 900px) { .gs .gs-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) {
+  .gs .gs-grid { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 600px) {
-  .gs .gs-top { flex-direction: column-reverse; }
-  .gs .gs-mode { align-self: flex-end; }
+  .gs .gs-top { padding-inline: 0; }
+  .gs .gs-mode { position: static; justify-self: end; margin-bottom: 10px; }
   .gs table { font-size: 14px; }
   .gs .gs-stack thead { display: none; }
   .gs .gs-stack tr { display: grid; padding-block: 10px; border-bottom: 1px solid var(--line); }
@@ -139,3 +144,10 @@
 .gs .gs-ev-empty { padding: 10px 0; color: var(--sky-soft); font-size: 14px; }
 @media (max-width: 600px) { .gs .gs-ev-sab { margin-left: 6px; } }
 @media (prefers-reduced-motion: reduce) { .gs .gs-sky { transition: none; } }
+/* phones and tablets: wheel, then the controls, then the coming-up list (after the base rules above) */
+@media (max-width: 900px) {
+  .gs .gs-left { display: contents; }
+  .gs .gs-wheelbox { order: 1; }
+  .gs .gs-ctl { order: 2; }
+  .gs .gs-events { order: 3; }
+}
