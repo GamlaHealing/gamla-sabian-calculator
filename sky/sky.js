@@ -322,6 +322,7 @@ function choose(c) {
   $("place").value = place.label; matches = []; active = -1; showSug(); placeMeta();
   setJD(fromLocal(f.y, f.m, f.d, f.h)); // keep the same local clock time in the new place
   renderEvents(); // event times follow the chosen place's clock
+  renderToday();
 }
 $("place").addEventListener("input", async () => { await citiesReady; matches = search($("place").value); active = matches.length ? 0 : -1; showSug(); });
 $("place").addEventListener("keydown", e => {
@@ -334,6 +335,50 @@ $("place").addEventListener("keydown", e => {
 $("sug").addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); choose(matches[+li.dataset.i]); } });
 $("place").addEventListener("blur", () => setTimeout(() => { matches = []; showSug(); }, 120));
 
+
+// ---------- today's Sabian symbols (always today, whatever moment the wheel shows)
+let today = null;
+function computeToday() {
+  const j = nowJD(), sun = calc(j, 0, SWIEPH | SPEED), moon = calc(j, 1, SWIEPH | SPEED);
+  if (sun.ret < 0 || moon.ret < 0) return null;
+  // the Moon's next whole degree and next sign, by bisection on its longitude
+  const cross = target => {
+    let a = j, b = j + 3;
+    const f = t => ((calc(t, 1, SWIEPH).lon - target + 540) % 360) - 180;
+    for (let i = 0; i < 40; i++) { const m = (a + b) / 2; if (f(m) < 0) a = m; else b = m; }
+    return (a + b) / 2;
+  };
+  const nextDeg = Math.floor(moon.lon) + 1, nextSign = (Math.floor(moon.lon / 30) + 1) * 30;
+  return { sun: sun.lon, moon: moon.lon, moonNextDeg: cross(nextDeg % 360), moonNextSign: cross(nextSign % 360), nextSignIndex: (Math.floor(moon.lon / 30) + 1) % 12 };
+}
+function whenText(j) {
+  const f = localFields(j), hh = Math.floor(f.h + 1e-9), mm = Math.floor((f.h - hh) * 60 + 1e-6), t = `${two(hh)}:${two(mm)}`;
+  const n = localFields(nowJD());
+  if (f.y === n.y && f.m === n.m && f.d === n.d) return `today at ${t}`;
+  return `on ${f.d} ${MONTHS[f.m - 1]} at ${t}`;
+}
+function symbolBlock(label, glyph, lon, extra) {
+  const pos = fmtPos(lon), sb = sabian(lon), r = sb.row || {};
+  const art = r.url ? `<a class="gs-td-link" href="${esc(r.url)}" target="_blank" rel="noopener">Read the article: ${esc(r.title || sb.key)}</a>` : "";
+  return `<div class="gs-td-item">
+    <p class="gs-td-label"><span class="gs-sym">${glyph}︎</span> ${label} at ${pos.text}</p>
+    <p class="gs-td-deg">${esc(sb.key)}°</p>
+    <p class="gs-td-symbol">${esc(r.symbol || "")}</p>
+    ${r.keyword ? `<p class="gs-td-kw">${esc(r.keyword)}</p>` : ""}
+    ${art}${extra || ""}
+  </div>`;
+}
+function renderToday() {
+  const box = $("today"); if (!box || !today) return;
+  const n = localFields(nowJD());
+  const moonExtra = `<p class="gs-td-next">The Moon moves into its next Sabian degree ${whenText(today.moonNextDeg)}, and into ${SIGNS[today.nextSignIndex]} ${whenText(today.moonNextSign)}.</p>`;
+  box.innerHTML = `<h2>Today's Sabian symbols</h2><p class="gs-td-date">${n.d} ${MONTHS[n.m - 1]} ${yearText(n.y)}, times for ${esc(place.label)}</p>
+    <div class="gs-td-grid">${symbolBlock("The Sun", "☉", today.sun)}${symbolBlock("The Moon", "☽", today.moon, moonExtra)}</div>`;
+}
+function buildTodayCard() {
+  const card = document.createElement("div"); card.className = "gs-card gs-today"; card.id = "gs-today";
+  const grid = document.querySelector(".gs .gs-grid"); grid.parentNode.insertBefore(card, grid);
+}
 
 // ---------- coming up: the next three months of lunations, eclipses, sign changes and stations
 let events = [], evFilter = "all", evActive = null;
@@ -416,7 +461,10 @@ let citiesReady;
     });
     $("place").value = ""; placeMeta();
     buildEventsCard();
+    buildTodayCard();
     await setJD(nowJD());
+    try { today = computeToday(); } catch { today = null; } renderToday();
+    setInterval(() => { try { today = computeToday(); renderToday(); } catch { } }, 60000);
     setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD(), 92); } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
   } catch (e) {
     $("when").textContent = `The ephemeris could not load (${e.message || e}). Reload the page to try again.`;

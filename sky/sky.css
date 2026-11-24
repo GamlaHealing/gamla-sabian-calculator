@@ -144,6 +144,26 @@
 .gs .gs-ev-empty { padding: 10px 0; color: var(--sky-soft); font-size: 14px; }
 @media (max-width: 600px) { .gs .gs-ev-sab { margin-left: 6px; } }
 @media (prefers-reduced-motion: reduce) { .gs .gs-sky { transition: none; } }
+/* ---- today's Sabian symbols (built by sky.js under the header) */
+.gs .gs-today { max-width: 980px; margin: 26px auto 0; padding: 22px 24px; text-align: center; }
+.gs .gs-today h2 { font-size: 17px; margin-bottom: 4px; }
+.gs .gs-td-date { font-size: 13px; color: var(--sky-soft); margin-bottom: 16px; }
+.gs .gs-td-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 32px; text-align: left; }
+.gs .gs-td-item { display: grid; gap: 4px; align-content: start; }
+.gs .gs-td-item + .gs-td-item { border-left: 1px solid var(--card-line); padding-left: 32px; }
+.gs .gs-td-label { font-size: 14px; color: var(--sky-soft); }
+.gs .gs-td-label .gs-sym { color: var(--card-head); font-size: 17px; }
+.gs .gs-td-deg { font-size: 13px; font-weight: 700; color: var(--card-head); margin-top: 4px; }
+.gs .gs-td-symbol { font-size: clamp(20px, 2.2vw, 24px); line-height: 1.25; color: var(--sky-head); text-wrap: balance; }
+.gs .gs-td-kw { font-size: 14px; color: var(--sky-soft); font-style: italic; }
+.gs .gs-td-link { font-size: 14px; color: var(--link); margin-top: 4px; }
+.gs[data-mode="night"] .gs-td-link { color: var(--card-head); }
+.gs .gs-td-next { font-size: 13px; color: var(--sky-soft); margin-top: 6px; }
+@media (max-width: 600px) {
+  .gs .gs-today { padding: 18px 16px; }
+  .gs .gs-td-grid { grid-template-columns: minmax(0, 1fr); }
+  .gs .gs-td-item + .gs-td-item { border-left: 0; padding-left: 0; border-top: 1px solid var(--card-line); padding-top: 16px; }
+}
 /* phones and tablets: wheel, then the controls, then the coming-up list (after the base rules above) */
 @media (max-width: 900px) {
   .gs .gs-left { display: contents; }
