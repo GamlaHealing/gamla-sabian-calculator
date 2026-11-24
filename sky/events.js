@@ -100,3 +100,55 @@ export function upcomingEvents(swe, M, jd0, days = 92) {
 }
 
 export { SIGNS as EVENT_SIGNS };
+
+// ---------- personal events against a birth chart
+// natal: { pts: [{ name, lon }], cusps: [12 longitudes] | null, asc, mc }
+// Returns exact transits in the window:
+//  - Jupiter to Pluto making a conjunction, sextile, square, trine or opposition to a birth
+//    planet, the North Node, the Ascendant or the Midheaven (every pass, retrograde ones too);
+//  - the Sun and Mars making a conjunction to the same points;
+//  - the Sun to Pluto crossing into a new birth house (when the birth time is known).
+const ASPECTS = [[0, "conjunct"], [60, "sextile"], [90, "square"], [120, "trine"], [180, "opposite"]];
+export function personalEvents(swe, M, jd0, natal, days = 92) {
+  const calc = makeCalc(M), end = jd0 + days, STEP = 0.25, out = [];
+  const targets = natal.pts.filter(q => q.name !== "South Node").map(q => ({ name: q.name, lon: q.lon }));
+  if (natal.cusps) targets.push({ name: "Ascendant", lon: natal.asc }, { name: "Midheaven", lon: natal.mc });
+  const plan = [[0, [0]], [4, [0]], ...[5, 6, 7, 8, 9].map(b => [b, [0, 60, 90, 120, 180]])];
+  for (const [b, angles] of plan) {
+    // sample the body once, then test every target against the samples
+    const ts = [], ls = [];
+    for (let t = jd0; t <= end + STEP; t += STEP) { ts.push(t); ls.push(calc(t, b).lon); }
+    for (const q of targets) for (const ang of angles) {
+      // a conjunction to the Ascendant or Midheaven is the same moment as entering the 1st or 10th house,
+      // which is listed below with its article, so it is not listed twice
+      if (ang === 0 && natal.cusps && (q.name === "Ascendant" || q.name === "Midheaven")) continue;
+      for (const sgn of ang === 0 || ang === 180 ? [1] : [1, -1]) {
+        const goal = (q.lon + sgn * ang + 360) % 360;
+        for (let i = 0; i + 1 < ts.length; i++) {
+          const a = wrap180(ls[i] - goal), c = wrap180(ls[i + 1] - goal);
+          if ((a < 0) !== (c < 0) && Math.abs(a - c) < 20) {
+            const jd = root(x => wrap180(calc(x, b).lon - goal), ts[i], ts[i + 1]);
+            if (jd >= jd0 && jd < end) {
+              const k = calc(jd, b);
+              out.push({ jd, kind: "transit", body: NAMES[b], aspect: ASPECTS.find(x => x[0] === ang)[1], target: q.name, retro: k.speed < 0, lon: k.lon });
+            }
+          }
+        }
+      }
+    }
+    // house ingresses (Sun to Pluto, not the Moon)
+    if (natal.cusps) {
+      const hOf = l => { for (let i = 0; i < 12; i++) { const a = natal.cusps[i], z = natal.cusps[(i + 1) % 12]; if (a <= z ? (a <= l && l < z) : (l >= a || l < z)) return i + 1; } return null; };
+      for (let i = 0; i + 1 < ts.length; i++) {
+        const h0 = hOf(ls[i]), h1 = hOf(ls[i + 1]);
+        if (h0 !== h1 && h1) {
+          const forward = wrap180(ls[i + 1] - ls[i]) > 0;
+          const edge = natal.cusps[(forward ? h1 : h0) - 1];
+          const jd = root(x => wrap180(calc(x, b).lon - edge), ts[i], ts[i + 1]);
+          if (jd >= jd0 && jd < end) out.push({ jd, kind: "house", body: NAMES[b], house: h1, retro: !forward, lon: calc(jd, b).lon });
+        }
+      }
+    }
+  }
+  return out.sort((x, y) => x.jd - y.jd);
+}

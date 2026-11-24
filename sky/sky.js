@@ -3,7 +3,7 @@
 // visitor's browser with the same swisseph-wasm build as the Sabian calculator.
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import SwissEph from "../dist/lib/src/swisseph.js"; // shared with the Sabian calculator
-import { upcomingEvents } from "./events.js";
+import { upcomingEvents, personalEvents } from "./events.js";
 {
 const asset = p => new URL(p, import.meta.url).href;
 const $ = id => document.getElementById("gs-" + id);
@@ -106,10 +106,11 @@ function offText(ms) { const s = ms < 0 ? "-" : "+", t = Math.round(Math.abs(ms)
 // ---------- formatting
 function fmtPos(l) { const s = Math.floor(l / 30), x = l - 30 * s, d = Math.floor(x + 1e-9), m = Math.min(59, Math.floor((x - d) * 60 + 1e-9)); return { s, d, m, text: `${d}°${two(m)}' ${SIGNS[s]}` }; }
 function sabian(l) { const s = Math.floor(l / 30), deg = Math.min(Math.floor(l - 30 * s) + 1, 30); return { key: `${SIGNS[s]} ${deg}`, row: degreeMap[`${SIGNS[s]} ${deg}`] }; }
+const houseIn = (cusps, l) => { for (let i = 0; i < 12; i++) { const a = cusps[i], b = cusps[(i + 1) % 12]; if (a <= b ? (a <= l && l < b) : (l >= a || l < b)) return i + 1; } return null; };
 const vlink = (h, label) => vault.has(h) ? `<a href="${VAULT}${h}" target="_blank" rel="noopener">${esc(label)}</a>` : "";
 
 // ---------- wheel
-const NS = "http://www.w3.org/2000/svg", C = 300, R_OUT = 282, R_Z = 240, R_P = 205, R_IN = 146;
+const NS = "http://www.w3.org/2000/svg", C = 300, R_OUT = 282, R_Z = 240, R_P = 205, R_IN = 146, R_N = 124;
 // The wheel is fixed: 0° Aries on the left, signs counter-clockwise. Only the planets,
 // the Ascendant and the Midheaven move. House lines show when paused or at slow playback.
 function drawWheel(s) {
@@ -125,18 +126,21 @@ function drawWheel(s) {
   }
   for (let d = 0; d < 360; d += 5) { const [a, b] = pt(d, R_Z), [c, e] = pt(d, R_Z - (d % 10 ? 5 : 9)); o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--w-tick)"/>`; }
   o += `<circle cx="${C}" cy="${C}" r="${R_IN}" fill="var(--w-inner)" stroke="var(--w-line)"/>`;
-  if (s.showHouses) s.cusps.forEach((l, i) => {
+  const NAT = natal && showNatal ? natal : null;
+  const cusps = NAT ? NAT.cusps : (s.showHouses ? s.cusps : null);
+  if (cusps) cusps.forEach((l, i) => {
     if (i % 3 === 0) return; // angles are drawn below
     const [a, b] = pt(l, R_IN), [c, e] = pt(l, R_Z);
     o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--w-house)" stroke-width="1"/>`;
   });
-  if (s.showHouses) s.cusps.forEach((l, i) => {
-    let nx = s.cusps[(i + 1) % 12]; if (nx < l) nx += 360;
-    const [hx, hy] = pt((l + nx) / 2, R_IN - 13);
+  if (cusps) cusps.forEach((l, i) => {
+    let nx = cusps[(i + 1) % 12]; if (nx < l) nx += 360;
+    const [hx, hy] = pt((l + nx) / 2, NAT ? R_IN + 11 : R_IN - 13);
     o += `<text x="${f(hx)}" y="${f(hy)}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="var(--w-num)" font-weight="700">${i + 1}</text>`;
   });
   // Ascendant / Descendant and Midheaven / IC axes, with the AC and MC as moving points on the rim
-  [[s.asc, "AC", "Ascendant"], [s.mc, "MC", "Midheaven"]].forEach(([l, t, name]) => {
+  const axes = NAT ? (NAT.cusps ? [[NAT.asc, "AC", "Your Ascendant"], [NAT.mc, "MC", "Your Midheaven"]] : []) : [[s.asc, "AC", "Ascendant"], [s.mc, "MC", "Midheaven"]];
+  axes.forEach(([l, t, name]) => {
     const [a, b] = pt(l, R_IN), [c, e] = pt(l, R_OUT), [a2, b2] = pt(l + 180, R_IN), [c2, e2] = pt(l + 180, R_Z);
     o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--gold)" stroke-width="2"/>`;
     o += `<line x1="${f(a2)}" y1="${f(b2)}" x2="${f(c2)}" y2="${f(e2)}" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="3 4"/>`;
@@ -145,6 +149,32 @@ function drawWheel(s) {
   });
   // major aspects between planets (conjunctions not drawn)
   const pl = s.pts.filter(p => !p.angle && p.name !== "South Node");
+  if (NAT) {
+    // the sky touching the birth chart: today's planets (not the Moon) to birth points, within 3°
+    const R_A = R_N - 18, natPts = NAT.pts.filter(q => q.name !== "South Node");
+    o += `<circle cx="${C}" cy="${C}" r="${R_A}" fill="none" stroke="var(--w-line)" stroke-dasharray="2 3"/>`;
+    for (const p of pl) {
+      if (p.name === "Moon" || p.name === "North Node") continue;
+      for (const q of natPts) {
+        const d = Math.abs(((p.lon - q.lon + 540) % 360) - 180);
+        for (const [ang, hard] of [[0, 1], [180, 1], [90, 1], [120, 0], [60, 0]]) {
+          if (Math.abs(d - ang) > 3) continue;
+          const on = !selected || selected === p.name;
+          const [a, b] = pt(p.lon, R_A), [c, e] = pt(q.lon, R_A);
+          o += ang === 0 ? `<circle cx="${f(c)}" cy="${f(e)}" r="5" fill="none" stroke="var(--hard)" stroke-width="2" opacity="${on ? .9 : .15}"><title>${p.name} conjunct your ${q.name}</title></circle>`
+            : `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--${hard ? "hard" : "soft"})" stroke-width="${selected && on ? 2.2 : 1.4}" opacity="${on ? .85 : .12}" stroke-linecap="round"/>`;
+        }
+      }
+    }
+    // the birth planets, on their own ring inside the wheel
+    const na = NAT.pts.map(q => ({ q, disp: q.lon })).sort((a, b) => a.disp - b.disp);
+    for (let it = 0; it < 100; it++) { let mv = false; for (let i = 0; i < na.length; i++) { const a = na[i], b = na[(i + 1) % na.length]; let d = b.disp - a.disp; if (i === na.length - 1) d += 360; if (d < 11) { const push = (11 - d) / 2; a.disp -= push; b.disp += push; mv = true; } } if (!mv) break; }
+    na.forEach(({ q, disp }) => {
+      const [x1, y1] = pt(q.lon, R_IN), [x2, y2] = pt(q.lon, R_IN - 7), [gx, gy] = pt(disp, R_N);
+      o += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="var(--gold)" stroke-width="1.6"/>`;
+      o += `<g><title>Your ${q.name} ${fmtPos(q.lon).text}</title><circle cx="${f(gx)}" cy="${f(gy)}" r="12" fill="var(--natal-bg)" stroke="var(--gold)"/><text x="${f(gx)}" y="${f(gy)}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="var(--natal-ink)" class="gs-sym">${q.glyph}\uFE0E</text></g>`;
+    });
+  } else
   for (let i = 0; i < pl.length; i++) for (let k = i + 1; k < pl.length; k++) {
     if (pl[i].name === "North Node" || pl[k].name === "North Node") continue;
     const d = Math.abs(((pl[i].lon - pl[k].lon + 540) % 360) - 180);
@@ -172,13 +202,16 @@ function drawWheel(s) {
 
 // ---------- ledger
 function drawLedger(s) {
+  const NAT = natal && showNatal ? natal : null;
+  const th = document.querySelector(".gs #gs-ledger thead th:nth-child(3)"); if (th) th.textContent = NAT ? "Your house" : "House";
   const rows = s.pts.map(p => {
     const pos = fmtPos(p.lon), sb = sabian(p.lon), r = sb.row || {};
+    const house = p.angle ? null : NAT ? (NAT.cusps ? houseIn(NAT.cusps, p.lon) : null) : p.house;
     const more = [];
     if (p.slug) more.push(vlink(`${p.slug}-in-${SIGNS[pos.s].toLowerCase()}-meaning`, `${p.name} in ${SIGNS[pos.s]}`));
-    if (p.slug && p.house) more.push(vlink(`${p.slug}-in-${HOUSE_WORD[p.house - 1]}-house-meaning`, `${p.name} in the ${ORD(p.house)} house`));
+    if (p.slug && house) more.push(vlink(`${p.slug}-in-${HOUSE_WORD[house - 1]}-house-meaning`, `${p.name} in ${NAT ? "your" : "the"} ${ORD(house)} house`));
     const sym = r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(sb.key)}°: ${esc(r.symbol)}</a><br><span class="kw">${esc(r.keyword || "")}</span>` : esc(sb.key + "°");
-    return `<tr class="${selected === p.name ? "hl" : ""}"><td><span class="g gs-sym">${p.angle ? "" : p.glyph + "︎"}</span>${esc(p.name)}</td><td class="pos">${pos.text}${p.retro ? " ℞" : ""}</td><td>${p.angle || !p.house ? "" : ORD(p.house)}</td><td>${sym}</td><td class="more">${more.filter(Boolean).join("")}</td></tr>`;
+    return `<tr class="${selected === p.name ? "hl" : ""}"><td><span class="g gs-sym">${p.angle ? "" : p.glyph + "︎"}</span>${esc(p.name)}</td><td class="pos">${pos.text}${p.retro ? " ℞" : ""}</td><td>${house ? ORD(house) : ""}</td><td>${sym}</td><td class="more">${more.filter(Boolean).join("")}</td></tr>`;
   });
   $("ledger").tBodies[0].innerHTML = rows.join("");
 }
@@ -336,6 +369,128 @@ $("sug").addEventListener("mousedown", e => { const li = e.target.closest("li");
 $("place").addEventListener("blur", () => setTimeout(() => { matches = []; showSug(); }, 120));
 
 
+// ---------- your chart: a birth chart kept only in this browser
+const NATAL_KEY = "gamla-sky-natal";
+let natal = null, natalInput = null, showNatal = true, pEvents = [];
+function birthJD(inp) {
+  const [y, mo, d] = inp.d.split("-").map(Number);
+  const [hh, mi] = inp.t ? inp.t.split(":").map(Number) : [12, 0];
+  const lj = julday(y, mo, d, hh + mi / 60, isGreg(y, mo, d));
+  const off = j => { try { return tzOffsetMs((j - 2440587.5) * 86400000, inp.tz); } catch { return inp.lo * 240000; } };
+  let j = lj - off(lj) / 86400000; j = lj - off(j) / 86400000; return j;
+}
+async function computeNatal(inp) {
+  const j = birthJD(inp);
+  let s = null;
+  for (let tries = 0; tries < 3; tries++) {
+    const pts = []; let need = null;
+    for (const [name, id, glyph, slug] of BODIES) {
+      const r = calc(j, id, SWIEPH | SPEED), n = missingFile(r.err);
+      if (n && (r.ret < 0 || !(r.ret & SWIEPH))) { need = n; break; }
+      pts.push({ name, glyph, slug, lon: r.lon });
+    }
+    if (need) { await loadBlock(need); continue; }
+    pts.push({ name: "South Node", glyph: "☋", lon: (pts[pts.length - 1].lon + 180) % 360 });
+    s = { pts, cusps: null, asc: null, mc: null };
+    break;
+  }
+  if (!s) throw new Error("ephemeris");
+  if (inp.t) {
+    const obl = calc(j, -1, 0).lon, polar = Math.abs(inp.la) >= 90 - obl;
+    const h = swe.houses(j, inp.la, inp.lo, polar ? "W" : "P");
+    s.cusps = Array.from(h.cusps).slice(1, 13); s.asc = h.ascmc[0]; s.mc = h.ascmc[1];
+  }
+  return s;
+}
+const natalName = () => natalInput && natalInput.n ? `${natalInput.n}'s chart` : "Your chart";
+async function setNatal(inp, save) {
+  if (!inp) { natal = natalInput = null; pEvents = []; try { localStorage.removeItem(NATAL_KEY); } catch { } renderNatalCard(); redraw(); renderEvents(); return; }
+  natal = await computeNatal(inp); natalInput = inp; showNatal = true;
+  if (save) { try { localStorage.setItem(NATAL_KEY, JSON.stringify(inp)); } catch { } }
+  try { pEvents = personalEvents(swe, M, nowJD(), natal, 92); } catch { pEvents = []; }
+  renderNatalCard(); redraw(); renderEvents();
+}
+function renderNatalCard() {
+  const card = $("natal"); if (!card) return;
+  if (natal && natalInput) {
+    const [y, mo, d] = natalInput.d.split("-").map(Number);
+    card.innerHTML = `<h2>${esc(natalName())}</h2>
+      <p class="gs-nat-sum">Born ${d} ${MONTHS[mo - 1]} ${y}${natalInput.t ? ` at ${esc(natalInput.t)}` : ", time unknown"}, ${esc(natalInput.p || "")}</p>
+      ${natalInput.t ? "" : `<p class="gs-meta">Without a birth time, the houses and your Ascendant are left out, and your Moon may be up to 7° from its true position.</p>`}
+      <div class="gs-row gs-nat-actions">
+        <button type="button" id="gs-nat-toggle" aria-pressed="${showNatal}">${showNatal ? "Hide from the wheel" : "Show on the wheel"}</button>
+        <button type="button" id="gs-nat-edit">Edit</button>
+        <button type="button" id="gs-nat-remove">Remove</button>
+      </div>
+      <p class="gs-meta">Saved only in this browser. Nothing is sent to Gamla Healing or anyone else.</p>`;
+    $("nat-toggle").onclick = () => { showNatal = !showNatal; renderNatalCard(); redraw(); renderEvents(); };
+    $("nat-edit").onclick = () => renderNatalForm(natalInput);
+    $("nat-remove").onclick = () => setNatal(null);
+  } else {
+    card.innerHTML = `<h2>Your chart in this sky</h2>
+      <p class="gs-nat-sum">Add your birth details to see your birth chart inside the moving sky, the houses today's planets are crossing for you, and your personal transits in the coming months.</p>
+      <button type="button" class="gs-primary" id="gs-nat-add">Add my birth chart</button>
+      <p class="gs-meta">Your details stay in this browser only.</p>`;
+    $("nat-add").onclick = () => renderNatalForm(null);
+  }
+}
+function renderNatalForm(prev) {
+  const card = $("natal"), v = prev || {};
+  let bplace = prev ? { lat: v.la, lon: v.lo, tz: v.tz, label: v.p } : null;
+  card.innerHTML = `<h2>Your birth details</h2>
+    <form class="gs-nat-form" id="gs-nat-form" novalidate>
+      <label>First name (optional)<input id="gs-nat-n" autocomplete="off" maxlength="40" value="${esc(v.n || "")}"></label>
+      <div class="gs-nat-two">
+        <label>Birth date<input id="gs-nat-d" type="date" min="1800-01-01" max="2399-12-31" required value="${esc(v.d || "")}"></label>
+        <label>Birth time<input id="gs-nat-t" type="time" value="${esc(v.t || "")}"></label>
+      </div>
+      <label class="gs-nat-check"><input type="checkbox" id="gs-nat-not"${prev && !v.t ? " checked" : ""}> I don't know my birth time</label>
+      <label>Birth place<span class="gs-place"><input id="gs-nat-p" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="gs-nat-sug" placeholder="Search a city" value="${esc(v.p || "")}"><ul class="gs-sug" id="gs-nat-sug" role="listbox" hidden></ul></span></label>
+      <p class="gs-meta" id="gs-nat-msg">Saved only in this browser. Nothing is sent to Gamla Healing or anyone else.</p>
+      <div class="gs-row"><button type="submit" class="gs-primary">Show my chart</button><button type="button" id="gs-nat-cancel">Cancel</button></div>
+    </form>`;
+  const inp = $("nat-p"), list = $("nat-sug"); let ms = [], act = -1;
+  const show = () => { list.innerHTML = ms.map((c, i) => `<li role="option" aria-selected="${i === act}" data-i="${i}"><span>${esc(labelOf(c))}</span><small>${esc(c.tz)}</small></li>`).join(""); list.hidden = !ms.length; inp.setAttribute("aria-expanded", String(!!ms.length)); };
+  const pick = c => { bplace = { lat: c.lat, lon: c.lon, tz: c.tz, label: labelOf(c) }; inp.value = bplace.label; ms = []; show(); };
+  inp.addEventListener("input", async () => { bplace = null; await citiesReady; ms = search(inp.value); act = ms.length ? 0 : -1; show(); });
+  inp.addEventListener("keydown", e => {
+    if (list.hidden) return;
+    if (e.key === "ArrowDown") { act = (act + 1) % ms.length; show(); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { act = (act - 1 + ms.length) % ms.length; show(); e.preventDefault(); }
+    else if (e.key === "Enter" && act >= 0) { pick(ms[act]); e.preventDefault(); }
+    else if (e.key === "Escape") { ms = []; show(); }
+  });
+  list.addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); pick(ms[+li.dataset.i]); } });
+  inp.addEventListener("blur", () => setTimeout(() => { ms = []; show(); }, 120));
+  $("nat-not").addEventListener("change", e => { $("nat-t").disabled = e.target.checked; });
+  $("nat-t").disabled = $("nat-not").checked;
+  $("nat-cancel").onclick = () => renderNatalCard();
+  $("nat-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const d = $("nat-d").value, t = $("nat-not").checked ? null : ($("nat-t").value || null), msg = $("nat-msg");
+    if (!/^\d{4}-\d\d-\d\d$/.test(d)) { msg.textContent = "Please enter your birth date."; return; }
+    if (!$("nat-not").checked && !t) { msg.textContent = "Please enter your birth time, or tick \"I don't know my birth time\"."; return; }
+    if (!bplace) { msg.textContent = "Please choose your birth place from the list."; return; }
+    msg.textContent = "Calculating…";
+    try { await setNatal({ v: 1, n: $("nat-n").value.trim().slice(0, 40), d, t, la: bplace.lat, lo: bplace.lon, tz: bplace.tz, p: bplace.label }, true); }
+    catch { msg.textContent = "Your chart could not be calculated. Please check the date and try again."; }
+  });
+}
+function buildNatalCard() {
+  const card = document.createElement("div"); card.className = "gs-card gs-natal"; card.id = "gs-natal";
+  const seen = document.querySelector(".gs .gs-ctl .gs-card"); seen.parentNode.insertBefore(card, seen.nextSibling);
+  renderNatalCard();
+}
+// A personal link from the Sabian calculator (#chart=...) is read the same way, on this device only.
+function natalFromHash() {
+  const m = location.hash.match(/chart=([A-Za-z0-9_-]+)/); if (!m) return null;
+  try {
+    const c = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")), ch => ch.charCodeAt(0))));
+    if (c.v !== 1 || !/^\d{4}-\d\d-\d\d$/.test(c.d) || typeof c.la !== "number" || typeof c.lo !== "number" || !c.tz) return null;
+    return { v: 1, n: "", d: c.d, t: c.t || null, la: c.la, lo: c.lo, tz: c.tz, p: c.p || "" };
+  } catch { return null; }
+}
+
 // ---------- today's Sabian symbols (always today, whatever moment the wheel shows)
 let today = null;
 function computeToday() {
@@ -381,13 +536,20 @@ function buildTodayCard() {
 }
 
 // ---------- coming up: the next three months of lunations, eclipses, sign changes and stations
-let events = [], evFilter = "all", evActive = null;
+let events = [], allEvents = [], evFilter = "all", evActive = null;
 const GLYPH = Object.fromEntries(BODIES.map(([n, , g]) => [n, g]));
-const EV_FILTERS = [["all", "All"], ["moon", "Moons and eclipses"], ["ingress", "Sign changes"], ["station", "Retrogrades"]];
-const evGroup = e => e.kind === "ingress" ? "ingress" : e.kind.startsWith("station") ? "station" : "moon";
+const EV_FILTERS = [["all", "All"], ["you", "For you"], ["moon", "Moons and eclipses"], ["ingress", "Sign changes"], ["station", "Retrogrades"]];
+const evGroup = e => e.kind === "transit" || e.kind === "house" ? "you" : e.kind === "ingress" ? "ingress" : e.kind.startsWith("station") ? "station" : "moon";
 const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
 function evText(e) {
   const pos = fmtPos(e.lon), sign = SIGNS[pos.s];
+  const yourHouse = () => { const N = natal && showNatal && natal.cusps ? natal : null; const h = N ? houseIn(N.cusps, e.lon) : null; return h ? `, in your ${ORD(h)} house` : ""; };
+  if (e.kind === "transit") return [`${e.body} ${e.aspect} your ${e.target}`, `${e.body} at ${pos.text}${e.retro ? ", retrograde" : ""}`];
+  if (e.kind === "house") return [`${e.body} ${e.retro ? "moves back into" : "enters"} your ${ORD(e.house)} house`, `at ${pos.text}`];
+  if (e.kind === "new") return [`New Moon in ${sign}`, pos.text + yourHouse()];
+  if (e.kind === "full") return [`Full Moon in ${sign}`, pos.text + yourHouse()];
+  if (e.kind === "solar-eclipse") return [`${cap(e.type)} solar eclipse in ${sign}`, pos.text + yourHouse()];
+  if (e.kind === "lunar-eclipse") return [`${cap(e.type)} lunar eclipse in ${sign}`, pos.text + yourHouse()];
   if (e.kind === "new") return [`New Moon in ${sign}`, pos.text];
   if (e.kind === "full") return [`Full Moon in ${sign}`, pos.text];
   if (e.kind === "solar-eclipse") return [`${cap(e.type)} solar eclipse in ${sign}`, pos.text];
@@ -401,19 +563,28 @@ function evText(e) {
 function evIcon(e) {
   if (e.kind === "new") return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--moon-dark)" stroke="var(--w-line)"/></svg>`;
   if (e.kind === "full") return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--moon-lit)" stroke="var(--w-ink)" stroke-width=".8"/></svg>`;
+  if (e.kind === "transit" || e.kind === "house") return `<span class="gs-sym gs-ev-you">${GLYPH[e.body] || ""}\uFE0E</span>`;
   if (e.kind.endsWith("eclipse")) return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--gold)"/><circle cx="${e.kind === "solar-eclipse" ? 12 : 13}" cy="9" r="6.2" fill="var(--card)"/></svg>`;
   return `<span class="gs-sym">${GLYPH[e.body] || ""}︎</span>`;
 }
 function renderEvents() {
   const box = $("ev-list"); if (!box || !events.length) return;
   let html = "", month = "";
-  for (const [i, e] of events.entries()) {
+  const mine = natal && showNatal;
+  const youBtn = document.querySelector('.gs .gs-ev-filters button[data-f="you"]'); if (youBtn) youBtn.hidden = !mine;
+  if (!mine && evFilter === "you") { evFilter = "all"; document.querySelectorAll(".gs .gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.f === "all"))); }
+  allEvents = (mine ? events.concat(pEvents) : events.slice()).sort((a, b) => a.jd - b.jd);
+  for (const [i, e] of allEvents.entries()) {
     if (evFilter !== "all" && evGroup(e) !== evFilter) continue;
     const f = localFields(e.jd), hh = Math.floor(f.h + 1e-9), mm = Math.floor((f.h - hh) * 60 + 1e-6);
     const mkey = `${MONTHS[f.m - 1]} ${yearText(f.y)}`;
     if (mkey !== month) { month = mkey; html += `<li class="gs-ev-month">${esc(mkey)}</li>`; }
     const [title, detail] = evText(e);
     let extra = "";
+    if (e.kind === "house") {
+      const slug = (BODIES.find(b => b[0] === e.body) || [])[3];
+      if (slug && vault.has(`${slug}-in-${HOUSE_WORD[e.house - 1]}-house-meaning`)) extra = `<a class="gs-ev-sab" href="${VAULT}${slug}-in-${HOUSE_WORD[e.house - 1]}-house-meaning" target="_blank" rel="noopener">Read: ${esc(e.body)} in the ${ORD(e.house)} house</a>`;
+    }
     if (e.kind === "new" || e.kind === "full" || e.kind.endsWith("eclipse")) {
       const sb = sabian(e.lon);
       if (sb.row && sb.row.url) extra = `<a class="gs-ev-sab" href="${esc(sb.row.url)}" target="_blank" rel="noopener">Sabian symbol ${esc(sb.key)}°: ${esc(sb.row.symbol)}</a>`;
@@ -439,7 +610,7 @@ function buildEventsCard() {
   });
   $("ev-list").addEventListener("click", ev => {
     const b = ev.target.closest("button[data-i]"); if (!b) return;
-    evActive = +b.dataset.i; stop(); setJD(events[evActive].jd); renderEvents();
+    evActive = +b.dataset.i; stop(); setJD(allEvents[evActive].jd); renderEvents();
     const top = document.querySelector(".gs .gs-sky"); if (top && top.getBoundingClientRect().top < -40) top.scrollIntoView({ behavior: "smooth" });
   });
 }
@@ -462,8 +633,10 @@ let citiesReady;
     $("place").value = ""; placeMeta();
     buildEventsCard();
     buildTodayCard();
+    buildNatalCard();
     await setJD(nowJD());
     try { today = computeToday(); } catch { today = null; } renderToday();
+    { let saved = natalFromHash(), fromLink = !!saved; if (!saved) { try { saved = JSON.parse(localStorage.getItem(NATAL_KEY) || "null"); } catch { saved = null; } } if (saved && saved.d) { try { await setNatal(saved, fromLink); } catch { } } }
     setInterval(() => { try { today = computeToday(); renderToday(); } catch { } }, 60000);
     setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD(), 92); } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
   } catch (e) {

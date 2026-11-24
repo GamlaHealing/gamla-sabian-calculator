@@ -17,7 +17,7 @@
   --w-bg: #FFFFFF; --w-inner: #FBFAFE; --w-line: #D9D4EC; --w-tick: #BDB6DD; --w-house: #DDD8EF; --w-num: #8E89B3;
   --w-ink: #2A2460; --w-deg: #6E6A86; --w-band: .16;
   --disc: #F3F1FA; --disc-line: #C9C3E4; --disc-ink: #2A2460; --disc-on: #7F77DD; --disc-on-ink: #FFFFFF;
-  --moon-dark: #DCD8F7; --moon-lit: #FFFFFF;
+  --moon-dark: #DCD8F7; --moon-lit: #FFFFFF; --natal-bg: #FBF6EE; --natal-ink: #7A5A2E;
   --fire: #D9654A; --earth: #9C7A4A; --air: #7F77DD; --water: #3E8DBF; --hard: #D9566E; --soft: #5C86D6;
   color: var(--ink); background: var(--bg); color-scheme: light;
 }
@@ -32,7 +32,7 @@
   --w-bg: #100E22; --w-inner: #0C0B1C; --w-line: #3A3666; --w-tick: #4A4678; --w-house: #3E3A6C; --w-num: #8E89B3;
   --w-ink: #FFFFFF; --w-deg: #B9B4D9; --w-band: .14;
   --disc: #1E1B3B; --disc-line: #4A4678; --disc-ink: #FFFFFF; --disc-on: #DCD8F7; --disc-on-ink: #1D1A3A;
-  --moon-dark: #2A2750; --moon-lit: #EDEBFA;
+  --moon-dark: #2A2750; --moon-lit: #EDEBFA; --natal-bg: #2A2335; --natal-ink: #E7CFA4;
   --fire: #EE8A6F; --earth: #C9A879; --air: #DCD8F7; --water: #86BEDF; --hard: #E5788C; --soft: #8DB0F0;
 }
 
@@ -164,6 +164,19 @@
   .gs .gs-td-grid { grid-template-columns: minmax(0, 1fr); }
   .gs .gs-td-item + .gs-td-item { border-left: 0; padding-left: 0; border-top: 1px solid var(--card-line); padding-top: 16px; }
 }
+/* ---- your chart (built by sky.js) */
+.gs .gs-natal .gs-nat-sum { font-size: 15px; margin-bottom: 12px; }
+.gs .gs-natal .gs-primary { width: 100%; }
+.gs .gs-nat-actions > * { flex: 1 1 auto; }
+.gs .gs-nat-form { display: grid; gap: 12px; margin: 0; padding: 0; background: none; border: 0; }
+.gs .gs-nat-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--sky-soft); margin: 0; }
+.gs .gs-nat-form input:not([type=checkbox]) { width: 100%; }
+.gs .gs-nat-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.gs .gs-nat-check { display: flex !important; align-items: center; gap: 8px; font-weight: 400 !important; font-size: 14px !important; }
+.gs .gs-nat-check input { min-height: 0; width: 18px; height: 18px; accent-color: var(--primary); }
+.gs .gs-nat-form .gs-row > * { flex: 1 1 auto; }
+.gs .gs-ev-you { color: var(--gold) !important; }
+.gs .gs-ev-filters button[hidden] { display: none; }
 /* phones and tablets: wheel, then the controls, then the coming-up list (after the base rules above) */
 @media (max-width: 900px) {
   .gs .gs-left { display: contents; }
