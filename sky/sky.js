@@ -632,12 +632,9 @@ let citiesReady;
     });
     $("place").value = ""; placeMeta();
     buildEventsCard();
-    buildTodayCard();
     buildNatalCard();
     await setJD(nowJD());
-    try { today = computeToday(); } catch { today = null; } renderToday();
     { let saved = natalFromHash(), fromLink = !!saved; if (!saved) { try { saved = JSON.parse(localStorage.getItem(NATAL_KEY) || "null"); } catch { saved = null; } } if (saved && saved.d) { try { await setNatal(saved, fromLink); } catch { } } }
-    setInterval(() => { try { today = computeToday(); renderToday(); } catch { } }, 60000);
     setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD(), 92); } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
   } catch (e) {
     $("when").textContent = `The ephemeris could not load (${e.message || e}). Reload the page to try again.`;
