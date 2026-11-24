@@ -108,28 +108,40 @@ function sabian(l) { const s = Math.floor(l / 30), deg = Math.min(Math.floor(l -
 const vlink = (h, label) => vault.has(h) ? `<a href="${VAULT}${h}" target="_blank" rel="noopener">${esc(label)}</a>` : "";
 
 // ---------- wheel
-const NS = "http://www.w3.org/2000/svg", C = 300, R_OUT = 292, R_Z = 248, R_P = 212, R_IN = 150;
+const NS = "http://www.w3.org/2000/svg", C = 300, R_OUT = 282, R_Z = 240, R_P = 205, R_IN = 146;
+// The wheel is fixed: 0° Aries on the left, signs counter-clockwise. Only the planets,
+// the Ascendant and the Midheaven move. House lines show when paused or at slow playback.
 function drawWheel(s) {
-  const svg = $("wheel"), A = l => (180 + (l - s.asc)) * Math.PI / 180;
+  const svg = $("wheel"), A = l => (180 + l) * Math.PI / 180;
   const pt = (l, r) => [C + r * Math.cos(A(l)), C - r * Math.sin(A(l))];
   const f = n => n.toFixed(1);
   const arc = (l1, l2, r1, r2) => { const [a, b] = pt(l1, r2), [c, d] = pt(l2, r2), [e, g] = pt(l2, r1), [h, i] = pt(l1, r1); return `M${f(a)} ${f(b)}A${r2} ${r2} 0 0 0 ${f(c)} ${f(d)}L${f(e)} ${f(g)}A${r1} ${r1} 0 0 1 ${f(h)} ${f(i)}Z`; };
-  let o = `<circle cx="${C}" cy="${C}" r="${R_OUT}" fill="#100E22" stroke="#3A3666" stroke-width="1.5"/>`;
+  let o = `<circle cx="${C}" cy="${C}" r="${R_OUT}" fill="var(--w-bg)" stroke="var(--w-line)" stroke-width="1.5"/>`;
   for (let i = 0; i < 12; i++) {
     const col = `var(--${ELEM[i % 4]})`, [tx, ty] = pt(i * 30 + 15, (R_Z + R_OUT) / 2);
-    o += `<path d="${arc(i * 30, i * 30 + 30, R_Z, R_OUT)}" fill="${col}" fill-opacity=".14" stroke="#3A3666"/>`;
+    o += `<path d="${arc(i * 30, i * 30 + 30, R_Z, R_OUT)}" fill="${col}" fill-opacity="var(--w-band)" stroke="var(--w-line)"/>`;
     o += `<text x="${f(tx)}" y="${f(ty)}" text-anchor="middle" dominant-baseline="central" font-size="24" fill="${col}" class="gs-sym"><title>${SIGNS[i]}</title>${SG[i]}</text>`;
   }
-  for (let d = 0; d < 360; d += 5) { const [a, b] = pt(d, R_Z), [c, e] = pt(d, R_Z - (d % 10 ? 5 : 9)); o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="#4A4678"/>`; }
-  o += `<circle cx="${C}" cy="${C}" r="${R_IN}" fill="#0C0B1C" stroke="#3A3666"/>`;
-  s.cusps.forEach((l, i) => {
-    const ang = i % 3 === 0, [a, b] = pt(l, R_IN), [c, e] = pt(l, ang ? R_OUT : R_Z);
-    o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="${ang ? "var(--gold)" : "#3E3A6C"}" stroke-width="${ang ? 2 : 1}"/>`;
-    let nx = s.cusps[(i + 1) % 12]; if (nx < l) nx += 360;
-    const [hx, hy] = pt((l + nx) / 2, R_IN + 14);
-    o += `<text x="${f(hx)}" y="${f(hy)}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#8E89B3" font-weight="700">${i + 1}</text>`;
+  for (let d = 0; d < 360; d += 5) { const [a, b] = pt(d, R_Z), [c, e] = pt(d, R_Z - (d % 10 ? 5 : 9)); o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--w-tick)"/>`; }
+  o += `<circle cx="${C}" cy="${C}" r="${R_IN}" fill="var(--w-inner)" stroke="var(--w-line)"/>`;
+  if (s.showHouses) s.cusps.forEach((l, i) => {
+    if (i % 3 === 0) return; // angles are drawn below
+    const [a, b] = pt(l, R_IN), [c, e] = pt(l, R_Z);
+    o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--w-house)" stroke-width="1"/>`;
   });
-  [["AC", s.asc, -6], ["MC", s.mc, 6]].forEach(([t, l, dx]) => { const [x, y] = pt(l + dx, R_IN - 16); o += `<text x="${f(x)}" y="${f(y)}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="var(--gold)">${t}</text>`; });
+  if (s.showHouses) s.cusps.forEach((l, i) => {
+    let nx = s.cusps[(i + 1) % 12]; if (nx < l) nx += 360;
+    const [hx, hy] = pt((l + nx) / 2, R_IN - 13);
+    o += `<text x="${f(hx)}" y="${f(hy)}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="var(--w-num)" font-weight="700">${i + 1}</text>`;
+  });
+  // Ascendant / Descendant and Midheaven / IC axes, with the AC and MC as moving points on the rim
+  [[s.asc, "AC", "Ascendant"], [s.mc, "MC", "Midheaven"]].forEach(([l, t, name]) => {
+    const [a, b] = pt(l, R_IN), [c, e] = pt(l, R_OUT), [a2, b2] = pt(l + 180, R_IN), [c2, e2] = pt(l + 180, R_Z);
+    o += `<line x1="${f(a)}" y1="${f(b)}" x2="${f(c)}" y2="${f(e)}" stroke="var(--gold)" stroke-width="2"/>`;
+    o += `<line x1="${f(a2)}" y1="${f(b2)}" x2="${f(c2)}" y2="${f(e2)}" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+    const [x, y] = pt(l, R_OUT);
+    o += `<g><title>${name} ${fmtPos(l).text}</title><circle cx="${f(x)}" cy="${f(y)}" r="14" fill="var(--gold)"/><text x="${f(x)}" y="${f(y)}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="var(--on-gold)">${t}</text></g>`;
+  });
   // major aspects between planets (conjunctions not drawn)
   const pl = s.pts.filter(p => !p.angle && p.name !== "South Node");
   for (let i = 0; i < pl.length; i++) for (let k = i + 1; k < pl.length; k++) {
@@ -149,10 +161,10 @@ function drawWheel(s) {
   arr.forEach(({ p, disp }) => {
     const [x1, y1] = pt(p.lon, R_Z), [x2, y2] = pt(p.lon, R_Z - 12), [gx, gy] = pt(disp, R_P), [dx, dy] = pt(disp, R_P - 30);
     const on = selected === p.name, pos = fmtPos(p.lon);
-    o += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="#fff" stroke-width="1.6"/>`;
-    o += `<g class="pt" tabindex="0" role="button" data-n="${p.name}" aria-label="${p.name} ${pos.text}"><circle cx="${f(gx)}" cy="${f(gy)}" r="16" fill="${on ? "var(--lav)" : "#1E1B3B"}" stroke="${on ? "#fff" : "#4A4678"}"/>`;
-    o += `<text x="${f(gx)}" y="${f(gy)}" text-anchor="middle" dominant-baseline="central" font-size="19" fill="${on ? "#1D1A3A" : "#fff"}" class="gs-sym">${p.glyph}︎</text></g>`;
-    o += `<text x="${f(dx)}" y="${f(dy)}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B9B4D9">${pos.d}°${p.retro ? "r" : ""}</text>`;
+    o += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="var(--w-ink)" stroke-width="1.6"/>`;
+    o += `<g class="pt" tabindex="0" role="button" data-n="${p.name}" aria-label="${p.name} ${pos.text}"><circle cx="${f(gx)}" cy="${f(gy)}" r="16" fill="${on ? "var(--disc-on)" : "var(--disc)"}" stroke="${on ? "var(--w-ink)" : "var(--disc-line)"}"/>`;
+    o += `<text x="${f(gx)}" y="${f(gy)}" text-anchor="middle" dominant-baseline="central" font-size="19" fill="${on ? "var(--disc-on-ink)" : "var(--disc-ink)"}" class="gs-sym">${p.glyph}︎</text></g>`;
+    o += `<text x="${f(dx)}" y="${f(dy)}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="var(--w-deg)">${pos.d}°${p.retro ? "r" : ""}</text>`;
   });
   svg.innerHTML = o;
 }
@@ -177,8 +189,8 @@ function drawMoon(s) {
   const k = Math.cos(el * Math.PI / 180), rx = Math.abs(k) * 22, waxing = el < 180;
   // lit part: half disc on the lit side plus an ellipse that grows or bites
   const d = `M30 8A22 22 0 0 ${waxing ? 1 : 0} 30 52A${rx.toFixed(1)} 22 0 0 ${(waxing ? k > 0 : k < 0) ? 0 : 1} 30 8Z`;
-  $("moon").innerHTML = `<svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="22" fill="#2A2750"/><path d="${d}" fill="#EDEBFA"/></svg>
-   <p><span class="lbl" style="color:var(--lav)">${ph}</span><br>${lit}% lit, ${Math.round(el)}° from the Sun. ${vlink("moon-phases-meaning", "The phases of the Moon")}</p>`;
+  $("moon").innerHTML = `<svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="22" fill="var(--moon-dark)" stroke="var(--w-line)"/><path d="${d}" fill="var(--moon-lit)"/></svg>
+   <p><span class="lbl">${ph}</span><br>${lit}% lit, ${Math.round(el)}° from the Sun. ${vlink("moon-phases-meaning", "The phases of the Moon")}</p>`;
 }
 function drawHeader() {
   const f = localFields(jd), hh = Math.floor(f.h + 1e-9), mm = Math.floor((f.h - hh) * 60 + 1e-6);
@@ -218,6 +230,7 @@ async function setJD(j, opts = {}) {
     if (s.need) return false;
   }
   $("loading").hidden = true;
+  s.showHouses = !(playing && parseFloat($("speed").value) > 0.05);
   sky = s; drawWheel(s); drawHeader(); drawMoon(s);
   if (!opts.light || !playing || performance.now() - lastLedger > 250) { drawLedger(s); lastLedger = performance.now(); }
   return true;
@@ -237,7 +250,7 @@ function frame(t) {
   }
   requestAnimationFrame(frame);
 }
-function stop() { playing = false; $("play").textContent = "Play"; $("play").setAttribute("aria-pressed", "false"); if (sky) drawLedger(sky); }
+function stop() { playing = false; $("play").textContent = "Play"; $("play").setAttribute("aria-pressed", "false"); if (sky) { sky.showHouses = true; drawWheel(sky); drawLedger(sky); } }
 $("play").addEventListener("click", () => { if (playing) return stop(); playing = true; $("play").textContent = "Pause"; $("play").setAttribute("aria-pressed", "true"); last = performance.now(); requestAnimationFrame(frame); });
 $("dir").addEventListener("click", () => { dirSign = -dirSign; $("dir").textContent = dirSign > 0 ? "Forward" : "Backward"; $("dir").setAttribute("aria-label", `Play direction: ${dirSign > 0 ? "forward" : "backward"}`); });
 $("now").addEventListener("click", () => { stop(); setJD(nowJD()); });
@@ -268,6 +281,17 @@ function fromInputs() {
 }
 ["d", "m", "y", "era", "time"].forEach(id => $(id).addEventListener("change", fromInputs));
 $("yr").addEventListener("input", () => { const f = localFields(jd), y = +$("yr").value; stop(); setJD(fromLocal(y, f.m, Math.min(f.d, daysIn(y, f.m)), f.h)); });
+
+// ---------- day / night (the visitor's choice is remembered on their device)
+const root = document.querySelector(".gs");
+function setMode(m) {
+  root.dataset.mode = m;
+  const b = $("mode");
+  if (b) { b.textContent = m === "night" ? "Day sky" : "Night sky"; b.setAttribute("aria-label", m === "night" ? "Switch to the day version" : "Switch to the night version"); }
+}
+let saved = null; try { saved = localStorage.getItem("gamla-sky-mode"); } catch { }
+setMode(saved === "day" || saved === "night" ? saved : (root.dataset.default === "night" ? "night" : "day"));
+if ($("mode")) $("mode").addEventListener("click", () => { const m = root.dataset.mode === "night" ? "day" : "night"; setMode(m); try { localStorage.setItem("gamla-sky-mode", m); } catch { } });
 
 // ---------- wheel selection
 function pick(n) { selected = selected === n ? null : n; redraw(); }

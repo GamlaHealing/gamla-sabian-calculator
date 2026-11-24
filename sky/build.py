@@ -26,7 +26,7 @@ NOTES = [
 ]
 
 # ---------- Shopify section
-live = m.replace("<!--GS_BASE-->", "{{ section.settings.cdn_base }}")
+live = m.replace("<!--GS_BASE-->", "{{ section.settings.cdn_base }}").replace("<!--GS_DEFAULT-->", ' data-default="{{ section.settings.default_mode }}"')
 live = live.replace("<!--GS_INTRO-->", '{%- if section.settings.intro != blank -%}<p class="gs-intro">{{ section.settings.intro }}</p>{%- endif -%}')
 live = live.replace("<!--GS_LEDGER_HEAD-->", '<h2 id="gs-lh">{{ section.settings.ledger_heading | escape }}</h2>\n  {%- if section.settings.ledger_intro != blank -%}<p class="gs-sub">{{ section.settings.ledger_intro | escape }}</p>{%- endif -%}')
 live = live.replace("<!--GS_NOTES-->", '<h2 id="gs-nh">{{ section.settings.notes_heading | escape }}</h2>\n  <div class="gs-cols">\n  {%- for block in section.blocks -%}\n   <div {{ block.shopify_attributes }}><h3>{{ block.settings.title | escape }}</h3><p>{{ block.settings.text | escape }}</p></div>\n  {%- endfor -%}\n  </div>')
@@ -40,6 +40,9 @@ schema = {
         {"type": "text", "id": "cdn_base", "label": "Sky chart files URL",
          "info": "jsDelivr URL of the sky folder, e.g. https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.3.0/sky (no trailing slash)"},
         {"type": "url", "id": "source_url", "label": "Source code link (AGPL)"},
+        {"type": "select", "id": "default_mode", "label": "Version shown first", "default": "day",
+         "options": [{"value": "day", "label": "Day (light)"}, {"value": "night", "label": "Night (dark)"}],
+         "info": "Visitors can switch with the Day sky / Night sky button; their choice is remembered on their device."},
         {"type": "inline_richtext", "id": "intro", "label": "Introduction", "default": INTRO},
         {"type": "text", "id": "ledger_heading", "label": "Placements heading", "default": LEDGER_HEADING},
         {"type": "textarea", "id": "ledger_intro", "label": "Placements introduction", "default": LEDGER_INTRO},
@@ -80,7 +83,7 @@ order = [f"note_{i+1}" for i in range(len(NOTES))]
 tpl = {"sections": {"sky": {"type": "sky-chart",
         "blocks": {k: {"type": "note", "settings": {"title": t, "text": x}} for k, (t, x) in zip(order, NOTES)},
         "block_order": order,
-        "settings": {"cdn_base": CDN, "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
+        "settings": {"cdn_base": CDN, "default_mode": "day", "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
                      "intro": INTRO, "ledger_heading": LEDGER_HEADING, "ledger_intro": LEDGER_INTRO, "notes_heading": NOTES_HEADING}}},
        "order": ["sky"]}
 (root / "shopify/templates").mkdir(parents=True, exist_ok=True)
@@ -88,7 +91,7 @@ tpl = {"sections": {"sky": {"type": "sky-chart",
 
 # ---------- local test page (served from the repo root: python3 -m http.server, open /sky/)
 e = html.escape
-test = m.replace("<!--GS_BASE-->", ".")
+test = m.replace("<!--GS_BASE-->", ".").replace("<!--GS_DEFAULT-->", ' data-default="day"')
 test = test.replace("<!--GS_INTRO-->", f'<p class="gs-intro">{e(INTRO)}</p>')
 test = test.replace("<!--GS_LEDGER_HEAD-->", f'<h2 id="gs-lh">{e(LEDGER_HEADING)}</h2><p class="gs-sub">{e(LEDGER_INTRO)}</p>')
 test = test.replace("<!--GS_NOTES-->", f'<h2 id="gs-nh">{e(NOTES_HEADING)}</h2><div class="gs-cols">' + "".join(f"<div><h3>{e(t)}</h3><p>{e(x)}</p></div>" for t, x in NOTES) + "</div>")
