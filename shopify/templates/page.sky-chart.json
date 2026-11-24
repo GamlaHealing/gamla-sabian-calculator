@@ -55,7 +55,7 @@
         "note_6"
       ],
       "settings": {
-        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@v1.3.0/sky",
+        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@04496d30baa0a2b801e69d9d8ff7a38b2f7587cf/sky",
         "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
         "intro": "Watch the planets move in real time, or travel to any moment from 4000 BC to 2999 AD. Every placement links to its Sabian symbol and to the full article on it.",
         "ledger_heading": "Every placement at this moment",

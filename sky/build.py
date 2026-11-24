@@ -3,11 +3,11 @@
   shopify/sections/sky-chart.liquid       the theme section (copy and notes editable in the theme editor)
   shopify/templates/page.sky-chart.json   the page template, pinned to a release tag
   sky/index.html                          a local test page with the same markup and default copy
-Usage: python3 sky/build.py v1.3.0
+Usage: python3 sky/build.py <tag or commit SHA>
 """
 import json, pathlib, sys, html
 
-tag = sys.argv[1] if len(sys.argv) > 1 else "v1.3.0"
+tag = sys.argv[1] if len(sys.argv) > 1 else "v1.3.0"  # a release tag or a full commit SHA
 root = pathlib.Path(__file__).resolve().parent.parent
 m = (root / "sky/markup.html").read_text(encoding="utf-8")
 CDN = f"https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@{tag}/sky"
