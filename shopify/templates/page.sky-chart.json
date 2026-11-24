@@ -55,7 +55,7 @@
         "note_6"
       ],
       "settings": {
-        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@6f57dee5db26998ebd19944f58952374881ef621/sky",
+        "cdn_base": "https://cdn.jsdelivr.net/gh/GamlaHealing/gamla-sabian-calculator@8867b728ca70ed86b22fe12b8ae5f70d2c1fa911/sky",
         "default_mode": "day",
         "header_image": "shopify://shop_images/gamla-sabian-header.png",
         "source_url": "https://github.com/GamlaHealing/gamla-sabian-calculator",
