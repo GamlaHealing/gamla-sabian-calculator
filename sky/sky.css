@@ -184,3 +184,12 @@
   .gs .gs-ctl { order: 2; }
   .gs .gs-events { order: 3; }
 }
+
+/* What this lunation means for you */
+.gs .gs-ev-read { margin: 0 0 12px calc(26px + 4.6em + 26px); padding: 12px 14px; border-radius: 10px; background: var(--sug-hover); font-size: 14px; line-height: 1.55; color: var(--sky-ink); }
+.gs .gs-ev-read h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--card-head); }
+.gs .gs-ev-read p { margin: 0 0 8px; }
+.gs .gs-ev-read p:last-child { margin-bottom: 0; }
+.gs .gs-ev-read .gs-ev-note { font-size: 12.5px; color: var(--sky-soft); }
+.gs .gs-ev-read .gs-ev-addchart { min-height: 40px; font-size: 14px; padding: 0 14px; }
+@media (max-width: 600px) { .gs .gs-ev-read { margin-left: 0; } }

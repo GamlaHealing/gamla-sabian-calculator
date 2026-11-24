@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import SwissEph from "../dist/lib/src/swisseph.js"; // shared with the Sabian calculator
 import { upcomingEvents, personalEvents } from "./events.js";
+import { NEW_MOON, FULL_MOON, SOLAR_ECLIPSE, LUNAR_ECLIPSE, HOUSE_NOTE } from "./lunation-texts.js";
 {
 const asset = p => new URL(p, import.meta.url).href;
 const $ = id => document.getElementById("gs-" + id);
@@ -588,11 +589,26 @@ function renderEvents() {
     if (e.kind === "new" || e.kind === "full" || e.kind.endsWith("eclipse")) {
       const sb = sabian(e.lon);
       if (sb.row && sb.row.url) extra = `<a class="gs-ev-sab" href="${esc(sb.row.url)}" target="_blank" rel="noopener">Sabian symbol ${esc(sb.key)}°: ${esc(sb.row.symbol)}</a>`;
+      if (evActive === i) extra += lunationReading(e);
     }
     html += `<li class="gs-ev${evActive === i ? " on" : ""}"><button type="button" data-i="${i}"><span class="gs-ev-ic">${evIcon(e)}</span><span class="gs-ev-when">${f.d} ${MONTHS[f.m - 1].slice(0, 3)}<small>${two(hh)}:${two(mm)}</small></span><span class="gs-ev-what"><b>${esc(title)}</b>${detail ? `<small>${esc(detail)}</small>` : ""}</span></button>${extra}</li>`;
   }
   box.innerHTML = html || `<li class="gs-ev-empty">Nothing of this kind in the next three months.</li>`;
-  $("ev-zone").textContent = `Times are local to ${place.label}${usesZone(nowJD()) ? ` (${offText(offsetMs(nowJD()))})` : ""}. Click an event to see the sky at that moment.`;
+  $("ev-zone").textContent = `Times are local to ${place.label}${usesZone(nowJD()) ? ` (${offText(offsetMs(nowJD()))})` : ""}. Click an event to see the sky at that moment${natal && showNatal ? ", or a New Moon, Full Moon or eclipse to read what it means for you" : ""}.`;
+}
+// "What this New Moon / Full Moon means for you": the house of the lunation in the visitor's birth chart.
+function lunationReading(e) {
+  const isNew = e.kind === "new" || e.kind === "solar-eclipse";
+  const what = e.kind.endsWith("eclipse") ? "this eclipse" : isNew ? "this New Moon" : "this Full Moon";
+  let body;
+  if (!(natal && showNatal)) body = `<p>Add your birth chart to see which area of your life ${what} touches, and what it means for you.</p><button type="button" class="gs-ev-addchart">Add my birth chart</button>`;
+  else if (!natal.cusps) body = `<p>Your birth time is needed to know which house ${what} falls in. Edit your birth chart to add it.</p>`;
+  else {
+    const h = houseIn(natal.cusps, e.lon);
+    const extra = e.kind === "solar-eclipse" ? SOLAR_ECLIPSE : e.kind === "lunar-eclipse" ? LUNAR_ECLIPSE : "";
+    body = `<p>${(isNew ? NEW_MOON : FULL_MOON)[h - 1]}</p>${extra ? `<p>${extra}</p>` : ""}<p class="gs-ev-note">${HOUSE_NOTE}</p>`;
+  }
+  return `<div class="gs-ev-read"><h3>What ${what} means for you</h3>${body}</div>`;
 }
 function buildEventsCard() {
   // The card is created here so the theme section never needs editing for it.
@@ -609,6 +625,7 @@ function buildEventsCard() {
     evFilter = b.dataset.f; card.querySelectorAll(".gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderEvents();
   });
   $("ev-list").addEventListener("click", ev => {
+    if (ev.target.closest(".gs-ev-addchart")) { renderNatalForm(null); const c = $("natal"); if (c) c.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const b = ev.target.closest("button[data-i]"); if (!b) return;
     evActive = +b.dataset.i; stop(); setJD(allEvents[evActive].jd); renderEvents();
     const top = document.querySelector(".gs .gs-sky"); if (top && top.getBoundingClientRect().top < -40) top.scrollIntoView({ behavior: "smooth" });
