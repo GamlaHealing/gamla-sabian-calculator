@@ -117,4 +117,25 @@
   .gs .gs-stack td:empty { display: none; }
   .gs .gs-date { grid-template-columns: 5.5em minmax(0, 1fr); }
 }
+/* ---- coming up (built by sky.js under the wheel) */
+.gs .gs-left { display: grid; gap: 20px; align-content: start; justify-items: center; }
+.gs .gs-left > .gs-events { width: 100%; max-width: 640px; }
+.gs .gs-ev-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.gs .gs-ev-filters button { min-height: 36px; font-size: 14px; padding: 0 12px; border-radius: 999px; }
+.gs .gs-ev-filters button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+.gs .gs-ev-list { list-style: none; margin: 0; padding: 0 4px 0 0; max-height: 440px; overflow-y: auto; overscroll-behavior: contain; }
+.gs .gs-ev-month { margin: 14px 0 4px; padding: 0; font-size: 13px; font-weight: 700; color: var(--card-head); }
+.gs .gs-ev-month:first-child { margin-top: 0; }
+.gs .gs-ev { margin: 0; padding: 0; border-bottom: 1px solid var(--card-line); }
+.gs .gs-ev button { display: grid; grid-template-columns: 26px 4.6em minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 8px 6px; min-height: 48px; color: var(--sky-ink); }
+.gs .gs-ev button:hover { background: var(--sug-hover); }
+.gs .gs-ev.on button { background: var(--sug-hover); box-shadow: inset 3px 0 0 var(--primary); }
+.gs .gs-ev-ic { display: grid; place-items: center; width: 26px; height: 26px; font-size: 18px; color: var(--card-head); }
+.gs .gs-ev-ic svg { width: 20px; height: 20px; }
+.gs .gs-ev-when { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; white-space: nowrap; }
+.gs .gs-ev-when small, .gs .gs-ev-what small { display: block; font-weight: 400; font-size: 13px; color: var(--sky-soft); }
+.gs .gs-ev-what b { font-weight: 600; font-size: 15px; }
+.gs .gs-ev-sab { display: block; margin: -4px 0 8px calc(26px + 4.6em + 26px); font-size: 13px; color: var(--card-head); }
+.gs .gs-ev-empty { padding: 10px 0; color: var(--sky-soft); font-size: 14px; }
+@media (max-width: 600px) { .gs .gs-ev-sab { margin-left: 6px; } }
 @media (prefers-reduced-motion: reduce) { .gs .gs-sky { transition: none; } }

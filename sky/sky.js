@@ -3,6 +3,7 @@
 // visitor's browser with the same swisseph-wasm build as the Sabian calculator.
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import SwissEph from "../dist/lib/src/swisseph.js"; // shared with the Sabian calculator
+import { upcomingEvents } from "./events.js";
 {
 const asset = p => new URL(p, import.meta.url).href;
 const $ = id => document.getElementById("gs-" + id);
@@ -320,6 +321,7 @@ function choose(c) {
   place = { lat: c.lat, lon: c.lon, tz: c.tz, label: labelOf(c) };
   $("place").value = place.label; matches = []; active = -1; showSug(); placeMeta();
   setJD(fromLocal(f.y, f.m, f.d, f.h)); // keep the same local clock time in the new place
+  renderEvents(); // event times follow the chosen place's clock
 }
 $("place").addEventListener("input", async () => { await citiesReady; matches = search($("place").value); active = matches.length ? 0 : -1; showSug(); });
 $("place").addEventListener("keydown", e => {
@@ -331,6 +333,71 @@ $("place").addEventListener("keydown", e => {
 });
 $("sug").addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); choose(matches[+li.dataset.i]); } });
 $("place").addEventListener("blur", () => setTimeout(() => { matches = []; showSug(); }, 120));
+
+
+// ---------- coming up: the next three months of lunations, eclipses, sign changes and stations
+let events = [], evFilter = "all", evActive = null;
+const GLYPH = Object.fromEntries(BODIES.map(([n, , g]) => [n, g]));
+const EV_FILTERS = [["all", "All"], ["moon", "Moons and eclipses"], ["ingress", "Sign changes"], ["station", "Retrogrades"]];
+const evGroup = e => e.kind === "ingress" ? "ingress" : e.kind.startsWith("station") ? "station" : "moon";
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+function evText(e) {
+  const pos = fmtPos(e.lon), sign = SIGNS[pos.s];
+  if (e.kind === "new") return [`New Moon in ${sign}`, pos.text];
+  if (e.kind === "full") return [`Full Moon in ${sign}`, pos.text];
+  if (e.kind === "solar-eclipse") return [`${cap(e.type)} solar eclipse in ${sign}`, pos.text];
+  if (e.kind === "lunar-eclipse") return [`${cap(e.type)} lunar eclipse in ${sign}`, pos.text];
+  if (e.kind === "station-retro") return [`${e.body} turns retrograde`, `at ${pos.text}`];
+  if (e.kind === "station-direct") return [`${e.body} turns direct`, `at ${pos.text}`];
+  // sign changes; the mean Node always moves backwards, so "enters" for it too
+  if (e.retro && e.body !== "North Node") return [`${e.body} moves back into ${SIGNS[e.sign]}`, "while retrograde"];
+  return [`${e.body} enters ${SIGNS[e.sign]}`, ""];
+}
+function evIcon(e) {
+  if (e.kind === "new") return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--moon-dark)" stroke="var(--w-line)"/></svg>`;
+  if (e.kind === "full") return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--moon-lit)" stroke="var(--w-ink)" stroke-width=".8"/></svg>`;
+  if (e.kind.endsWith("eclipse")) return `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="var(--gold)"/><circle cx="${e.kind === "solar-eclipse" ? 12 : 13}" cy="9" r="6.2" fill="var(--card)"/></svg>`;
+  return `<span class="gs-sym">${GLYPH[e.body] || ""}︎</span>`;
+}
+function renderEvents() {
+  const box = $("ev-list"); if (!box || !events.length) return;
+  let html = "", month = "";
+  for (const [i, e] of events.entries()) {
+    if (evFilter !== "all" && evGroup(e) !== evFilter) continue;
+    const f = localFields(e.jd), hh = Math.floor(f.h + 1e-9), mm = Math.floor((f.h - hh) * 60 + 1e-6);
+    const mkey = `${MONTHS[f.m - 1]} ${yearText(f.y)}`;
+    if (mkey !== month) { month = mkey; html += `<li class="gs-ev-month">${esc(mkey)}</li>`; }
+    const [title, detail] = evText(e);
+    let extra = "";
+    if (e.kind === "new" || e.kind === "full" || e.kind.endsWith("eclipse")) {
+      const sb = sabian(e.lon);
+      if (sb.row && sb.row.url) extra = `<a class="gs-ev-sab" href="${esc(sb.row.url)}" target="_blank" rel="noopener">Sabian symbol ${esc(sb.key)}°: ${esc(sb.row.symbol)}</a>`;
+    }
+    html += `<li class="gs-ev${evActive === i ? " on" : ""}"><button type="button" data-i="${i}"><span class="gs-ev-ic">${evIcon(e)}</span><span class="gs-ev-when">${f.d} ${MONTHS[f.m - 1].slice(0, 3)}<small>${two(hh)}:${two(mm)}</small></span><span class="gs-ev-what"><b>${esc(title)}</b>${detail ? `<small>${esc(detail)}</small>` : ""}</span></button>${extra}</li>`;
+  }
+  box.innerHTML = html || `<li class="gs-ev-empty">Nothing of this kind in the next three months.</li>`;
+  $("ev-zone").textContent = `Times are local to ${place.label}${usesZone(nowJD()) ? ` (${offText(offsetMs(nowJD()))})` : ""}. Click an event to see the sky at that moment.`;
+}
+function buildEventsCard() {
+  // The card is created here so the theme section never needs editing for it.
+  const left = document.createElement("div"); left.className = "gs-left";
+  const wb = document.querySelector(".gs .gs-wheelbox"); wb.parentNode.insertBefore(left, wb); left.appendChild(wb);
+  const card = document.createElement("div"); card.className = "gs-card gs-events";
+  card.innerHTML = `<h2>Coming up in the next three months</h2>
+    <div class="gs-ev-filters" role="group" aria-label="Show">${EV_FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${k === evFilter}">${l}</button>`).join("")}</div>
+    <ul class="gs-ev-list" id="gs-ev-list"><li class="gs-ev-empty">Finding the coming events…</li></ul>
+    <p class="gs-meta" id="gs-ev-zone"></p>`;
+  left.appendChild(card);
+  card.querySelector(".gs-ev-filters").addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    evFilter = b.dataset.f; card.querySelectorAll(".gs-ev-filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderEvents();
+  });
+  $("ev-list").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-i]"); if (!b) return;
+    evActive = +b.dataset.i; stop(); setJD(events[evActive].jd); renderEvents();
+    const top = document.querySelector(".gs .gs-sky"); if (top && top.getBoundingClientRect().top < -40) top.scrollIntoView({ behavior: "smooth" });
+  });
+}
 
 // ---------- boot
 let citiesReady;
@@ -348,7 +415,9 @@ let citiesReady;
       if (c && !$("place").value) choose(c);
     });
     $("place").value = ""; placeMeta();
+    buildEventsCard();
     await setJD(nowJD());
+    setTimeout(() => { try { events = upcomingEvents(swe, M, nowJD(), 92); } catch (err) { events = []; } if (events.length) renderEvents(); else $("ev-list").innerHTML = `<li class="gs-ev-empty">The coming events could not be calculated.</li>`; }, 30);
   } catch (e) {
     $("when").textContent = `The ephemeris could not load (${e.message || e}). Reload the page to try again.`;
   }
