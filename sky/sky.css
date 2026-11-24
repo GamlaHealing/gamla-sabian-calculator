@@ -197,3 +197,6 @@
 /* Phones and tablets: the title switches between one line ("The sky right now") and two ("The sky on 24 September 2026")
    while the chart plays. Reserve two lines so the buttons below never jump under the visitor's finger. */
 @media (max-width: 900px) { .gs .gs-sky h1#gs-title { min-height: 2.2em; display: flex; align-items: center; justify-content: center; } }
+
+/* Keep the wheel's redraws from re-laying out the rest of the page during playback. */
+.gs .gs-wheelbox { contain: layout paint; }

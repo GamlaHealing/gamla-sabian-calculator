@@ -267,7 +267,7 @@ async function setJD(j, opts = {}) {
   $("loading").hidden = true;
   s.showHouses = !(playing && parseFloat($("speed").value) > 0.05);
   sky = s; drawWheel(s); drawHeader(); drawMoon(s);
-  if (!opts.light || !playing || performance.now() - lastLedger > 250) { drawLedger(s); lastLedger = performance.now(); }
+  if (!opts.light || !playing || performance.now() - lastLedger > (COARSE ? 1000 : 400)) { drawLedger(s); lastLedger = performance.now(); }
   return true;
 }
 let lastLedger = 0;
@@ -275,18 +275,29 @@ const redraw = () => { if (sky) { drawWheel(sky); drawLedger(sky); } };
 
 // ---------- playback
 let playing = false, dirSign = 1, last = 0, busy = false;
+// Frames are paced, not run flat out: redrawing the wheel is heavy for the browser, and a phone given no
+// breathing room between frames stops answering taps (Pause seemed dead on iPhone). Phones draw ~20 times a
+// second, computers ~30, with a pause after every frame at least as long as the frame itself took.
+const COARSE = matchMedia("(pointer: coarse)").matches;
+const FRAME_MS = COARSE ? 50 : 33;
+let timer = 0;
 function frame(t) {
   if (!playing) return;
-  const dt = Math.min(0.1, (t - last) / 1000); last = t;
-  if (!busy) {
-    const nj = jd + dirSign * dt * parseFloat($("speed").value);
-    if (nj <= MIN_JD || nj >= MAX_JD) { stop(); setJD(nj); return; }
-    busy = true; setJD(nj, { light: true }).finally(() => { busy = false; });
-  }
-  requestAnimationFrame(frame);
+  const dt = Math.min(0.2, (t - last) / 1000); last = t;
+  const nj = jd + dirSign * dt * parseFloat($("speed").value);
+  if (nj <= MIN_JD || nj >= MAX_JD) { stop(); setJD(nj); return; }
+  const t0 = performance.now();
+  busy = true;
+  setJD(nj, { light: true }).finally(() => {
+    busy = false; if (!playing) return;
+    const took = performance.now() - t0;
+    timer = setTimeout(() => requestAnimationFrame(frame), Math.max(FRAME_MS - took, took, 8));
+  });
 }
-function stop() { playing = false; $("play").textContent = "Play"; $("play").setAttribute("aria-pressed", "false"); if (sky) { sky.showHouses = true; drawWheel(sky); drawLedger(sky); } }
-$("play").addEventListener("click", () => { if (playing) return stop(); playing = true; $("play").textContent = "Pause"; $("play").setAttribute("aria-pressed", "true"); last = performance.now(); requestAnimationFrame(frame); });
+function stop() { playing = false; clearTimeout(timer); $("play").textContent = "Play"; $("play").setAttribute("aria-pressed", "false"); if (sky) { sky.showHouses = true; drawWheel(sky); drawLedger(sky); } }
+let ignorePlayClick = 0;
+$("play").addEventListener("pointerdown", e => { if (playing && e.pointerType !== "mouse") { stop(); ignorePlayClick = performance.now(); } });
+$("play").addEventListener("click", () => { if (performance.now() - ignorePlayClick < 1000) { ignorePlayClick = 0; return; } if (playing) return stop(); playing = true; $("play").textContent = "Pause"; $("play").setAttribute("aria-pressed", "true"); last = performance.now(); requestAnimationFrame(frame); });
 $("dir").addEventListener("click", () => { dirSign = -dirSign; $("dir").textContent = dirSign > 0 ? "Forward" : "Backward"; $("dir").setAttribute("aria-label", `Play direction: ${dirSign > 0 ? "forward" : "backward"}`); });
 $("now").addEventListener("click", () => { stop(); setJD(nowJD()); });
 // iPhone fix: while the chart plays, the wheel is redrawn many times a second. Safari on iOS then reads each tap
